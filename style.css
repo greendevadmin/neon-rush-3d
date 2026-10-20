@@ -40,3 +40,22 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
 .pause-card p{color:#b6cedb;font-size:14px;line-height:1.5}
 .pause-card button{margin-top:12px;padding:13px 22px;border:0;border-radius:9px;background:#10cfff;color:#031222;font-weight:900;letter-spacing:1px;cursor:pointer}
 @media(max-width:640px){.top-left{top:10px;left:10px;width:150px;gap:6px}.stat-panel{padding:8px 10px;min-height:56px}.eyebrow{font-size:11px}.stat-panel strong{font-size:23px}.coin-icon{width:20px;height:20px;font-size:12px}.position-panel{top:10px;right:10px;width:112px;padding:8px 10px}.position-panel strong{font-size:27px}.map-panel{left:10px;bottom:13px;width:132px;height:132px}.speed-panel{right:10px;bottom:12px;width:150px;gap:6px}.speed-dial{height:105px;border-width:3px}.speed-number{font-size:33px}.speed-top{font-size:10px;margin-top:7px}.speed-scale{font-size:7px;margin-top:4px}.nitro-panel{height:47px;padding:5px 8px;gap:7px;border-radius:10px}.bolt{font-size:29px}.nitro-content .eyebrow{font-size:11px}.nitro-track{height:9px}#pause-button{left:10px;bottom:155px;width:49px;height:48px;font-size:21px}#hint{bottom:154px;max-width:calc(100vw - 40px);font-size:9px;white-space:normal;padding:7px 9px}}
+
+
+/* HUD for circuit racing: laps, timer and finishing screen. */
+.race-panel{position:fixed;z-index:2;top:17px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:22px;padding:9px 18px;min-width:190px;justify-content:center}
+.race-stat{display:flex;flex-direction:column;gap:2px;text-align:center}
+.race-stat strong{font-size:25px;line-height:1.1;font-style:italic;font-weight:900;font-variant-numeric:tabular-nums}
+.time-stat{border-left:1px solid #2c5166;padding-left:19px}
+.time-stat strong{font-size:20px}
+#finish-overlay{display:none;position:fixed;inset:0;z-index:9;background:#020b16bf;backdrop-filter:blur(8px);place-items:center}
+#finish-overlay.visible{display:grid}
+.finish-card h1{margin-bottom:8px}
+#finish-position{display:block;font-size:34px;font-style:italic;font-weight:900;color:var(--cyan);margin:10px 0}
+#finish-stats{font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .race-panel{top:100px;gap:12px;padding:7px 10px;min-width:145px}
+  .race-stat strong{font-size:20px}
+  .time-stat{padding-left:11px}
+  .time-stat strong{font-size:16px}
+}
