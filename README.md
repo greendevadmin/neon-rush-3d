@@ -1,16 +1,26 @@
-# Neon Rush 3D — circuito circular
+# Neon Rush 3D — corrida de circuito
 
-O projeto gera a pista a partir de segmentos retos e arcos circulares definidos por raio e ângulo. Estrada, marcações e meios-fios acompanham a linha central da pista.
+Neon Rush é um jogo de corrida arcade 3D no navegador. Corra contra cinco competidores em um circuito fechado de três voltas, colete moedas, use nitro e tente terminar em primeiro lugar.
 
-## VS Code.dev
-1. Extraia o ZIP e abra https://vscode.dev.
-2. Adicione os três arquivos do projeto ao repositório/pasta.
-3. Para executar, use um servidor estático que suporte módulos ES, como GitHub Pages ou StackBlitz. Abrir o HTML diretamente por `file://` pode bloquear o JavaScript modular.
+## Publicação
+O projeto usa Three.js por CDN e pode ser publicado pelo GitHub Pages:
+1. Abra Settings → Pages no repositório.
+2. Em Build and deployment, escolha Deploy from a branch.
+3. Selecione a branch `main` e a pasta `/(root)`, depois clique em Save.
 
 ## Controles
 - W ou seta para cima: acelerar
 - S ou seta para baixo: frear
 - A/D ou setas laterais: virar
-- Espaço: nitro
+- Espaço ou Shift: nitro
+- Esc: pausar ou continuar
+- Botão de pausa: pausar ou continuar
 
-O motor Three.js é carregado por CDN; é necessário internet.
+## Recursos
+- Circuito fechado com faixa quadriculada de largada/chegada
+- Corrida de três voltas com cronômetro e classificação
+- Cinco carros rivais (sem perseguição policial)
+- Moedas, bônus de nitro, minimapa e HUD arcade
+- Tela de chegada e opção de reiniciar
+
+O jogo requer conexão com a internet para carregar o Three.js da CDN.
