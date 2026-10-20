@@ -18,8 +18,8 @@ O projeto usa Three.js por CDN e pode ser publicado pelo GitHub Pages:
 
 ## Recursos
 - Circuito fechado com faixa quadriculada de largada/chegada
-- Corrida de três voltas com cronômetro e classificação
-- Cinco carros rivais (sem perseguição policial)
+- Corrida de três voltas com aceleração gradual, contagem regressiva e cronômetro e classificação
+- Cinco carros rivais (sem perseguição policial); o jogador controla o próprio carro, sem piloto automático
 - Moedas, bônus de nitro, minimapa e HUD arcade
 - Tela de chegada e opção de reiniciar
 
