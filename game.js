@@ -114,7 +114,7 @@ function coloredKerbs() {
     leftEnd.y = outerEnd.y = 0.075;
     vertices.push(leftEnd.x, leftEnd.y, leftEnd.z, outerEnd.x, outerEnd.y, outerEnd.z);
     for (let k = 0; k < 4; k++) colors.push(color.r, color.g, color.b);
-    const b = i * 4;
+    const b = i * 8;
     indices.push(b, b + 2, b + 1, b + 2, b + 3, b + 1);
     // Matching kerb on the opposite edge.
     const base = vertices.length / 3;
