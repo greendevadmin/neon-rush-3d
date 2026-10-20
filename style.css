@@ -59,3 +59,6 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
   .time-stat{padding-left:11px}
   .time-stat strong{font-size:16px}
 }
+
+#start-countdown{position:fixed;inset:0;z-index:8;display:none;place-items:center;font-size:clamp(100px,22vw,220px);font-weight:1000;font-style:italic;color:#fff;text-shadow:0 0 24px #00d9ff,0 8px 0 #09223d;pointer-events:none}
+#start-countdown.visible{display:grid}
