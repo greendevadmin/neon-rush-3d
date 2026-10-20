@@ -19,6 +19,16 @@
       <strong><span class="coin-icon">¢</span><span id="coins">0</span></strong>
     </section>
   </header>
+  <section class="panel race-panel">
+    <div class="race-stat">
+      <span class="eyebrow">VOLTA</span>
+      <strong id="lap">1/3</strong>
+    </div>
+    <div class="race-stat time-stat">
+      <span class="eyebrow">TEMPO</span>
+      <strong id="race-time">00:00.0</strong>
+    </div>
+  </section>
   <section class="panel position-panel">
     <span class="eyebrow">POSIÇÃO</span>
     <strong id="position">1/6</strong>
@@ -54,8 +64,17 @@
     <div class="pause-card">
       <span class="eyebrow">NEON RUSH</span>
       <h1>Corrida pausada</h1>
-      <p>Respire fundo. A próxima curva está esperando.</p>
+      <p>Prepare-se para a próxima curva.</p>
       <button id="resume-button">CONTINUAR</button>
+    </div>
+  </div>
+  <div id="finish-overlay">
+    <div class="pause-card finish-card">
+      <span class="eyebrow">NEON RUSH · LINHA DE CHEGADA</span>
+      <h1>Corrida concluída!</h1>
+      <strong id="finish-position">1º LUGAR</strong>
+      <p id="finish-stats">Tempo: 00:00.0 · 0 pontos · 0 moedas</p>
+      <button id="restart-button">CORRER NOVAMENTE</button>
     </div>
   </div>
   <script type="module" src="game.js"></script>
