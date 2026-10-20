@@ -1,1 +1,63 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neon Rush 3D</title><link rel="stylesheet" href="style.css"></head><body><div id="hud"><div class="panel"><b>NEON RUSH</b><span id="speed">0 KM/H</span><small>WASD / SETAS · ESPAÇO: NITRO</small></div><div id="hint">Pista com retas e arcos circulares conectados</div></div><div id="loading">CARREGANDO PISTA 3D…</div><script type="module" src="game.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#061426">
+  <title>Neon Rush 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loading">PREPARANDO A CORRIDA…</div>
+  <header class="top-left">
+    <section class="panel stat-panel">
+      <span class="eyebrow">PONTOS</span>
+      <strong id="points">0</strong>
+    </section>
+    <section class="panel stat-panel coins-panel">
+      <span class="eyebrow">MOEDAS</span>
+      <strong><span class="coin-icon">¢</span><span id="coins">0</span></strong>
+    </section>
+  </header>
+  <section class="panel position-panel">
+    <span class="eyebrow">POSIÇÃO</span>
+    <strong id="position">1/6</strong>
+  </section>
+
+  <div class="map-panel">
+    <svg id="minimap" viewBox="0 0 200 200" role="img" aria-label="Minimapa do circuito">
+      <circle cx="100" cy="100" r="94" class="map-ring"/>
+      <path id="maptrack" d="" class="map-track-shadow"/>
+      <path id="maptrack-inner" d="" class="map-track"/>
+      <polygon id="player-marker" points="100,91 94,106 106,106" />
+    </svg>
+  </div>
+  <button id="pause-button" aria-label="Pausar">Ⅱ</button>
+
+  <section class="speed-panel">
+    <div class="speed-dial">
+      <div class="speed-top">KM/H</div>
+      <div class="speed-number"><span id="speed">0</span></div>
+      <div class="speed-scale">0&nbsp;&nbsp; 80&nbsp;&nbsp; 160&nbsp;&nbsp; 240</div>
+    </div>
+    <div class="nitro-panel">
+      <span class="bolt">ϟ</span>
+      <div class="nitro-content">
+        <span class="eyebrow">NITRO</span>
+        <div class="nitro-track"><div id="nitro-fill"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="hint">WASD / SETAS PARA DIRIGIR • ESPAÇO PARA USAR O NITRO</div>
+  <div id="pause-overlay">
+    <div class="pause-card">
+      <span class="eyebrow">NEON RUSH</span>
+      <h1>Corrida pausada</h1>
+      <p>Respire fundo. A próxima curva está esperando.</p>
+      <button id="resume-button">CONTINUAR</button>
+    </div>
+  </div>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
