@@ -48,7 +48,7 @@ const controlPoints = [
   [87, 0, -75], [60, 0, -97], [22, 0, -105], [-20, 0, -101],
   [-57, 0, -82], [-77, 0, -54], [-75, 0, -25], [-96, 0, 0],
   [-111, 0, 32], [-105, 0, 65], [-82, 0, 91], [-47, 0, 106]
-].map(p => new THREE.Vector3(p[0], p[1], p[2]));
+].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
 const path = centerCurve.getSpacedPoints(1000).slice(0, -1)
@@ -413,6 +413,7 @@ mapPath.setAttribute('d', path.map((p, i) => {
 }).join(' ') + ' Z');
 
 const TOTAL_LAPS = 3;
+let countdown = 3.5;
 let playerProgress = 0;
 let s = 0;
 let currentLap = 1;
@@ -464,6 +465,7 @@ function restartRace() {
   s = 0;
   currentLap = 1;
   raceTime = 0;
+  countdown = 3.5;
   raceFinished = false;
   lateral = 0;
   speed = 0;
@@ -522,20 +524,33 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
   if (!paused && !raceFinished) {
-    raceTime += dt;
+    if (countdown > 0) {
+      countdown = Math.max(0, countdown - dt);
+      speed = 0;
+      document.getElementById('start-countdown').textContent =
+        countdown > 0.55 ? Math.ceil(countdown).toString() : 'VAI!';
+      document.getElementById('start-countdown').classList.add('visible');
+    } else {
+      document.getElementById('start-countdown').classList.remove('visible');
+    }
+    const raceCanMove = countdown <= 0;
+    if (raceCanMove) raceTime += dt;
     document.getElementById('race-time').textContent = formatRaceTime(raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
     const steering = (keys.a || keys.arrowleft ? -1 : 0) + (keys.d || keys.arrowright ? 1 : 0);
-    const usingNitro = (keys[' '] || keys.shift) && nitro > 0 && speed > 3;
+    const usingNitro = countdown <= 0 && (keys[' '] || keys.shift) && nitro > 3 && speed > 3;
     if (usingNitro) {
       speed += 27 * dt;
       nitro = Math.max(0, nitro - 26 * dt);
     } else {
       nitro = Math.min(100, nitro + 5.5 * dt);
     }
-    speed += (accelerating ? 17 : 0) - (braking ? 28 : 0) - (speed > 0 ? 3.2 : 0);
-    speed = THREE.MathUtils.clamp(speed, 0, usingNitro ? 64 : 49);
+    const engineAcceleration = countdown <= 0 && accelerating ? 20 : 0;
+    const brakeForce = countdown <= 0 && braking ? 34 : 0;
+    const rollingResistance = speed > 0 ? 2.4 : 0;
+    speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
+    speed = THREE.MathUtils.clamp(speed, 0, usingNitro ? 58 : 42);
 
     lateral += steering * dt * (2.5 + speed * 0.105);
     const edge = ROAD_WIDTH / 2 - 1.05;
@@ -548,7 +563,7 @@ function animate() {
     s = wrap(playerProgress);
     currentLap = Math.min(TOTAL_LAPS, Math.floor(playerProgress / N) + 1);
     document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
-    if (playerProgress >= TOTAL_LAPS * N) finishRace();
+    if (countdown <= 0 && playerProgress >= TOTAL_LAPS * N) finishRace();
 
     const player = pose(s, lateral);
     car.position.copy(player.p);
@@ -556,7 +571,7 @@ function animate() {
     car.rotation.y = Math.atan2(player.t.x, player.t.z) - steering * 0.035;
 
     for (const rival of rivals) {
-      rival.progress += rival.pace * dt / spacing;
+      if (countdown <= 0) rival.progress += rival.pace * dt / spacing;
       rival.s = wrap(rival.progress);
       const q = pose(rival.s, rival.off);
       rival.mesh.position.copy(q.p);
