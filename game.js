@@ -205,10 +205,11 @@ for (let i = 0; i < N; i += 8) {
   }
 }
 
-// Low-poly mountain silhouettes outside the circuit.
+// Distant low-poly mountain silhouettes. Kept well outside the track and barriers
+// so scenery cannot overlap the racing surface or block the player's view.
 for (let i = 0; i < 52; i++) {
   const angle = i * 2.399;
-  const radius = 165 + (i % 6) * 23;
+  const radius = 330 + (i % 6) * 28;
   const height = 24 + (i * 17 % 48);
   const size = 14 + (i % 5) * 4;
   const mountain = new THREE.Mesh(
@@ -235,7 +236,8 @@ for (let i = 0; i < 22; i++) {
     new THREE.ConeGeometry(11 + (i % 4) * 3, 18 + (i % 5) * 5, 7),
     coastCliffs
   );
-  rock.position.set(120 + (i % 4) * 7, -3 + (i % 3), -150 + i * 14);
+  // Decorative rocks are placed far beyond the circuit, never on the road.
+  rock.position.set(300 + (i % 4) * 18, -3 + (i % 3), -260 + i * 24);
   rock.rotation.z = (i % 2 ? 0.18 : -0.12);
   scene.add(rock);
 }
@@ -243,14 +245,14 @@ for (let i = 0; i < 22; i++) {
 // A distant waterfall adds a landmark to the coastal course.
 const cliffRock = mat(0x7a7564, 1);
 const cliff = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 20), cliffRock);
-cliff.position.set(-130, 4, 10);
+cliff.position.set(-290, 4, 220);
 scene.add(cliff);
 const waterfallMat = new THREE.MeshStandardMaterial({
   color: 0x82d6ee, emissive: 0x1a6d91, emissiveIntensity: 0.28,
   transparent: true, opacity: 0.82, roughness: 0.22, side: THREE.DoubleSide
 });
 const waterfall = new THREE.Mesh(new THREE.PlaneGeometry(8, 23), waterfallMat);
-waterfall.position.set(-119, 0, 13);
+waterfall.position.set(-279, 0, 223);
 waterfall.rotation.y = -0.18;
 scene.add(waterfall);
 
@@ -548,9 +550,10 @@ function animate() {
     }
     const engineAcceleration = countdown <= 0 && accelerating ? 20 : 0;
     const brakeForce = countdown <= 0 && braking ? 34 : 0;
-    const rollingResistance = speed > 0 ? 2.4 : 0;
+    const rollingResistance = speed > 0 ? (accelerating ? 1.2 : 11.5) : 0;
     speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
     speed = THREE.MathUtils.clamp(speed, 0, usingNitro ? 58 : 42);
+    if (!accelerating && !usingNitro && speed < 0.35) speed = 0;
 
     lateral += steering * dt * (2.5 + speed * 0.105);
     const edge = ROAD_WIDTH / 2 - 1.05;
@@ -559,7 +562,8 @@ function animate() {
       speed *= 0.9;
     }
     lateral *= Math.pow(0.989, dt * 60);
-    playerProgress += speed * dt / spacing;
+    // The player's car advances only from manually generated speed; no auto-drive.
+    if (accelerating || speed > 0) playerProgress += speed * dt / spacing;
     s = wrap(playerProgress);
     currentLap = Math.min(TOTAL_LAPS, Math.floor(playerProgress / N) + 1);
     document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
