@@ -147,6 +147,31 @@ ribbon(ROAD_WIDTH / 2, ROAD_WIDTH / 2 + KERB_WIDTH, 0.035, white);
 ribbon(-ROAD_WIDTH / 2, ROAD_WIDTH / 2, 0.025, asphalt);
 coloredKerbs();
 
+// Checkered start/finish line, aligned with the track at the first checkpoint.
+{
+  const start = path[0];
+  const t = tangent(0);
+  const line = new THREE.Group();
+  line.position.copy(start);
+  line.position.y = 0.105;
+  line.rotation.y = Math.atan2(t.x, t.z);
+  const tiles = 12;
+  const tileWidth = ROAD_WIDTH / tiles;
+  const blackTile = mat(0x10151b, 0.8);
+  const whiteTile = mat(0xf6f1e8, 0.8);
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < tiles; col++) {
+      const tile = new THREE.Mesh(
+        new THREE.BoxGeometry(tileWidth, 0.035, 0.42),
+        (row + col) % 2 ? whiteTile : blackTile
+      );
+      tile.position.set((col - (tiles - 1) / 2) * tileWidth, 0, (row - 0.5) * 0.42);
+      line.add(tile);
+    }
+  }
+  scene.add(line);
+}
+
 // Center dashes are rotated to follow each section of the road.
 const dashMat = new THREE.MeshStandardMaterial({ color: 0xf6f0e5, roughness: 0.8 });
 for (let i = 0; i < N; i += 21) {
@@ -311,13 +336,16 @@ scene.add(car);
 const rivals = [];
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 for (let i = 0; i < 5; i++) {
-  const mesh = makeCar(rivalColors[i], i === 0);
+  // Five regular competitors line up just behind the player's start position.
+  const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
+  const startProgress = -(i + 1) * 22;
   rivals.push({
     mesh,
-    s: wrap(Math.floor(N * 0.77) + i * 28),
+    progress: startProgress,
+    s: wrap(startProgress),
     off: i % 2 ? 2.7 : -2.6,
-    pace: 11.8 + i * 0.9
+    pace: 24 + i * 1.4
   });
 }
 
@@ -384,14 +412,18 @@ mapPath.setAttribute('d', path.map((p, i) => {
   return (i ? 'L' : 'M') + q.x.toFixed(1) + ' ' + q.y.toFixed(1);
 }).join(' ') + ' Z');
 
+const TOTAL_LAPS = 3;
+let playerProgress = 0;
 let s = 0;
+let currentLap = 1;
+let raceTime = 0;
+let raceFinished = false;
 let lateral = 0;
 let speed = 0;
 let nitro = 100;
 let points = 0;
 let coinCount = 0;
 let paused = false;
-let lastHint = 0;
 const keys = {};
 addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
@@ -402,12 +434,63 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
 function togglePause() {
+  if (raceFinished) return;
   paused = !paused;
   document.getElementById('pause-overlay').classList.toggle('visible', paused);
   document.getElementById('pause-button').textContent = paused ? '▶' : 'Ⅱ';
 }
 document.getElementById('pause-button').addEventListener('click', togglePause);
 document.getElementById('resume-button').addEventListener('click', togglePause);
+
+function formatRaceTime(seconds) {
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const remaining = (seconds % 60).toFixed(1).padStart(4, '0');
+  return minutes + ':' + remaining;
+}
+function finishRace() {
+  raceFinished = true;
+  speed = 0;
+  paused = false;
+  const place = 1 + rivals.filter(r => r.progress > playerProgress).length;
+  document.getElementById('finish-position').textContent = place + 'º LUGAR';
+  document.getElementById('finish-stats').textContent =
+    'Tempo: ' + formatRaceTime(raceTime) + ' · ' +
+    points.toLocaleString('pt-BR') + ' pontos · ' + coinCount + ' moedas';
+  document.getElementById('finish-overlay').classList.add('visible');
+  document.getElementById('pause-overlay').classList.remove('visible');
+}
+function restartRace() {
+  playerProgress = 0;
+  s = 0;
+  currentLap = 1;
+  raceTime = 0;
+  raceFinished = false;
+  lateral = 0;
+  speed = 0;
+  nitro = 100;
+  points = 0;
+  coinCount = 0;
+  paused = false;
+  for (const key in keys) keys[key] = false;
+  rivals.forEach((r, i) => {
+    r.progress = -(i + 1) * 22;
+    r.s = wrap(r.progress);
+  });
+  [...coins, ...boosts].forEach(item => {
+    item.collected = false;
+    item.mesh.visible = true;
+  });
+  document.getElementById('finish-overlay').classList.remove('visible');
+  document.getElementById('pause-overlay').classList.remove('visible');
+  document.getElementById('pause-button').textContent = 'Ⅱ';
+  document.getElementById('lap').textContent = '1/' + TOTAL_LAPS;
+  document.getElementById('race-time').textContent = '00:00.0';
+  document.getElementById('points').textContent = '0';
+  document.getElementById('coins').textContent = '0';
+  document.getElementById('nitro-fill').style.width = '100%';
+  document.getElementById('position').textContent = '1/6';
+}
+document.getElementById('restart-button').addEventListener('click', restartRace);
 
 const clock = new THREE.Clock();
 function circularDifference(a, b) {
@@ -438,7 +521,9 @@ function updatePickups(items, dt, type) {
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
-  if (!paused) {
+  if (!paused && !raceFinished) {
+    raceTime += dt;
+    document.getElementById('race-time').textContent = formatRaceTime(raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
     const steering = (keys.a || keys.arrowleft ? -1 : 0) + (keys.d || keys.arrowright ? 1 : 0);
@@ -459,7 +544,11 @@ function animate() {
       speed *= 0.9;
     }
     lateral *= Math.pow(0.989, dt * 60);
-    s = wrap(s + speed * dt / spacing);
+    playerProgress += speed * dt / spacing;
+    s = wrap(playerProgress);
+    currentLap = Math.min(TOTAL_LAPS, Math.floor(playerProgress / N) + 1);
+    document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
+    if (playerProgress >= TOTAL_LAPS * N) finishRace();
 
     const player = pose(s, lateral);
     car.position.copy(player.p);
@@ -467,7 +556,8 @@ function animate() {
     car.rotation.y = Math.atan2(player.t.x, player.t.z) - steering * 0.035;
 
     for (const rival of rivals) {
-      rival.s = wrap(rival.s + rival.pace * dt / spacing);
+      rival.progress += rival.pace * dt / spacing;
+      rival.s = wrap(rival.progress);
       const q = pose(rival.s, rival.off);
       rival.mesh.position.copy(q.p);
       rival.mesh.position.y = 0;
@@ -490,7 +580,7 @@ function animate() {
     document.getElementById('coins').textContent = coinCount;
     document.getElementById('nitro-fill').style.width = nitro + '%';
 
-    const ahead = rivals.filter(r => circularDifference(r.s, s) > 0).length;
+    const ahead = rivals.filter(r => r.progress > playerProgress).length;
     document.getElementById('position').textContent = (ahead + 1) + '/6';
 
     const marker = mapXY(player.p);
