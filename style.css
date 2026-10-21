@@ -83,3 +83,45 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
   .speed-panel{bottom:168px}
   #hint{bottom:144px;max-width:calc(100vw - 40px)}
 }
+
+/* Main menu and settings screens */
+.menu-screen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;overflow-y:auto;padding:24px;background:rgba(2,9,20,.25);color:#f5fbff}
+.menu-screen.hidden{display:none}
+.menu-backdrop{position:absolute;inset:0;background:linear-gradient(115deg,rgba(2,10,23,.95),rgba(3,22,43,.86) 52%,rgba(0,105,151,.32));backdrop-filter:blur(5px)}
+.menu-content,.settings-card{position:relative;width:min(92vw,480px);padding:clamp(24px,5vw,42px);border:1px solid rgba(35,207,255,.5);border-radius:22px;background:linear-gradient(145deg,rgba(5,23,43,.97),rgba(4,13,28,.97));box-shadow:0 24px 90px #0009, inset 0 1px #ffffff0c}
+.menu-content{text-align:center}
+.menu-kicker{font-size:10px;font-weight:900;letter-spacing:2px;color:#1bdcff}
+.game-logo{margin:13px 0 2px;font-size:clamp(42px,10vw,70px);font-weight:1000;font-style:italic;letter-spacing:-3px;line-height:.98;text-shadow:0 5px 0 #09253f,0 0 28px #00cfff35}
+.game-logo span{color:#19d9ff}
+.game-logo small{display:block;margin-top:8px;font-size:15px;letter-spacing:8px;color:#b4d9e8}
+.menu-subtitle{margin:15px 0 27px;color:#aac4d5;font-size:14px}
+.mode-heading{text-align:left;font-size:11px;font-weight:900;letter-spacing:1.8px;color:#9ebccc;margin-bottom:10px}
+.mode-card{width:100%;display:flex;align-items:center;gap:13px;padding:15px;text-align:left;border:1px solid #20cfff;border-radius:13px;background:linear-gradient(110deg,#0b3551,#0a1c31);color:#fff;cursor:pointer}
+.mode-icon{display:grid;place-items:center;width:43px;height:43px;flex:none;border-radius:10px;background:#0b5271;font-size:23px}
+.mode-copy{display:flex;flex:1;flex-direction:column;gap:5px}
+.mode-copy strong{font-size:15px}
+.mode-copy small{font-size:11px;line-height:1.4;color:#a9c7d6}
+.mode-check{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#14d6ff;color:#031525;font-weight:900}
+.future-modes{margin:13px 0 19px;color:#63849a;font-size:9px;font-weight:900;letter-spacing:1.8px}
+.menu-primary,.menu-secondary{width:100%;min-height:48px;border-radius:10px;font-weight:1000;letter-spacing:1.4px;cursor:pointer}
+.menu-primary{border:0;background:linear-gradient(100deg,#18d8ff,#42f0cf);color:#031525;box-shadow:0 8px 25px #00cfff26}
+.menu-primary span{margin-left:10px}
+.menu-secondary{margin-top:10px;border:1px solid #28536a;background:#09192a;color:#d5edf7}
+.menu-primary:hover{filter:brightness(1.08)}.menu-secondary:hover{border-color:#19d9ff}
+.menu-footer{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#7c9bab;font-size:9px;font-weight:900;letter-spacing:2px}.menu-footer span{color:#19d9ff;margin:0 8px}
+.settings-card{width:min(92vw,520px)}
+.settings-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.settings-top h2{margin:8px 0 0;font-size:30px}
+.settings-symbol{font-size:31px;color:#19d9ff}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 0;border-top:1px solid #244052}
+.setting-row strong{display:block;font-size:14px}.setting-row small{display:block;margin-top:6px;color:#9cb8c8;font-size:11px;line-height:1.4}
+.sensitivity-control{display:flex;align-items:center;gap:10px;min-width:145px}
+.sensitivity-control input{width:100px;accent-color:#19d9ff}
+.sensitivity-control span{min-width:38px;font-size:12px;font-weight:900;color:#19d9ff}
+.setting-toggle input{width:20px;height:20px;accent-color:#19d9ff}
+.settings-controls{margin:8px 0 24px;padding:16px;border-radius:12px;background:#041321;border:1px solid #1a3c51}
+.settings-controls>strong{font-size:10px;letter-spacing:1.5px;color:#19d9ff}
+.settings-controls p{margin:12px 0 0;font-size:11px;line-height:1.8;color:#b5cbd8}
+.settings-controls p span{color:#19d9ff}
+kbd{display:inline-block;padding:2px 5px;border:1px solid #36566a;border-radius:4px;background:#10283a;color:#f3fbff;font:inherit;font-weight:900}
+@media(max-width:640px){.menu-screen{padding:14px}.menu-content,.settings-card{padding:24px 20px}.game-logo{font-size:48px}.menu-subtitle{margin-bottom:21px}.setting-row{gap:10px}.sensitivity-control{min-width:125px}.sensitivity-control input{width:80px}.settings-controls{padding:12px}}
