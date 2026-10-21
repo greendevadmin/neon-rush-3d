@@ -90,6 +90,42 @@
       <button id="restart-button">CORRER NOVAMENTE</button>
     </div>
   </div>
+
+  <div id="main-menu" class="menu-screen">
+    <div class="menu-backdrop"></div>
+    <div class="menu-content">
+      <div class="menu-kicker">CORRIDA • VELOCIDADE • ADRENALINA</div>
+      <h1 class="game-logo">NEON <span>RUSH</span><small>3D</small></h1>
+      <p class="menu-subtitle">Escolha seu modo e entre na pista.</p>
+      <div class="mode-heading">SELECIONE O MODO</div>
+      <button id="mode-race" class="mode-card selected" type="button">
+        <span class="mode-icon">🏁</span>
+        <span class="mode-copy"><strong>Corrida clássica</strong><small>Dispute 3 voltas contra outros pilotos.</small></span>
+        <span class="mode-check">✓</span>
+      </button>
+      <div class="future-modes">MAIS MODOS CHEGANDO EM BREVE</div>
+      <button id="play-button" class="menu-primary" type="button">JOGAR <span>▶</span></button>
+      <button id="open-settings" class="menu-secondary" type="button">⚙ CONFIGURAÇÕES</button>
+    </div>
+    <div class="menu-footer">NEON RUSH 3D <span>•</span> MODO MANUAL</div>
+  </div>
+  <div id="settings-screen" class="menu-screen hidden">
+    <div class="menu-backdrop"></div>
+    <div class="settings-card">
+      <div class="settings-top"><div><div class="menu-kicker">PERSONALIZE SUA EXPERIÊNCIA</div><h2>Configurações</h2></div><span class="settings-symbol">⚙</span></div>
+      <div class="setting-row">
+        <div><strong>Sensibilidade da direção</strong><small>Ajusta a rapidez das curvas.</small></div>
+        <div class="sensitivity-control"><input id="steering-sensitivity" type="range" min="50" max="150" value="100"><span id="sensitivity-value">100%</span></div>
+      </div>
+      <label class="setting-row setting-toggle" for="invert-steering">
+        <span><strong>Inverter direção</strong><small>Troca esquerda e direita.</small></span>
+        <input id="invert-steering" type="checkbox">
+      </label>
+      <div class="settings-controls"><strong>CONTROLES</strong><p><kbd>W</kbd> / <kbd>↑</kbd> Acelerar <span>·</span> <kbd>S</kbd> / <kbd>↓</kbd> Frear</p><p><kbd>A</kbd> / <kbd>←</kbd> e <kbd>D</kbd> / <kbd>→</kbd> Direção <span>·</span> <kbd>Espaço</kbd> Nitro</p><p><kbd>Esc</kbd> Pausar</p></div>
+      <button id="close-settings" class="menu-primary" type="button">SALVAR E VOLTAR</button>
+    </div>
+  </div>
+
   <script type="module" src="game.js"></script>
 </body>
 </html>
