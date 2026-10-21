@@ -131,7 +131,7 @@ kbd{display:inline-block;padding:2px 5px;border:1px solid #36566a;border-radius:
 .menu-backdrop{background:
   linear-gradient(90deg,rgba(2,10,23,.98) 0%,rgba(2,12,27,.91) 25%,rgba(2,13,29,.68) 43%,rgba(3,17,34,.12) 75%,rgba(3,17,34,.08) 100%),
   linear-gradient(0deg,rgba(1,7,18,.78),transparent 48%),
-  url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1800&q=90') center 56%/cover no-repeat,
+  url('assets/overdrive-menu.png') center 56%/cover no-repeat,
   linear-gradient(135deg,#09253f,#087aa3 55%,#ff8748)}
 .menu-content{align-self:center;width:min(40vw,590px);min-width:410px;margin-left:clamp(24px,6.5vw,115px);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;text-align:left}
 .menu-kicker{font-size:clamp(9px,.85vw,13px);letter-spacing:4px;color:#27dfff}
@@ -187,7 +187,7 @@ kbd{display:inline-block;padding:2px 5px;border:1px solid #36566a;border-radius:
 .mode-art{position:relative;min-height:clamp(390px,60vh,680px);overflow:hidden;border:1px solid #1d7da6;border-radius:18px;background:
 linear-gradient(0deg,rgba(1,8,19,.96) 0%,rgba(1,8,19,.2) 52%,rgba(1,8,19,.05) 100%),
 linear-gradient(90deg,rgba(1,13,28,.25),transparent 60%),
-url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=85') center/cover,
+url('assets/overdrive-menu.png') center/cover,
 linear-gradient(135deg,#09253f,#087aa3 55%,#ff8748);
 box-shadow:0 18px 70px #0008,inset 0 0 70px #00aaff13}
 .mode-art:before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,transparent 45%,#00bfff20 45.2%,transparent 45.7%);pointer-events:none}
