@@ -4,8 +4,8 @@ const requestedTrack = new URLSearchParams(location.search).get('track') || 'coa
 const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
 const trackLayouts = {
  coast: [[0,0,145],[42,0,145],[88,0,130],[126,0,100],[145,0,62],[139,0,28],[112,0,5],[83,0,-5],[71,0,-32],[91,0,-58],[104,0,-91],[88,0,-126],[55,0,-146],[15,0,-150],[-19,0,-134],[-38,0,-105],[-67,0,-91],[-99,0,-103],[-128,0,-86],[-145,0,-54],[-140,0,-20],[-117,0,5],[-101,0,31],[-113,0,59],[-106,0,91],[-81,0,119],[-48,0,137]],
- canyon: [[0,0,150],[35,0,140],[70,0,115],[95,0,75],[105,0,35],[85,0,5],[55,0,-10],[30,0,-30],[35,0,-65],[65,0,-90],[85,0,-125],[60,0,-155],[20,0,-165],[-20,0,-150],[-45,0,-120],[-80,0,-110],[-115,0,-125],[-145,0,-100],[-150,0,-60],[-125,0,-25],[-90,0,-5],[-75,0,30],[-90,0,65],[-75,0,100],[-45,0,130]],
- neon: [[0,0,150],[55,0,150],[100,0,130],[130,0,95],[130,0,55],[100,0,25],[65,0,25],[45,0,0],[65,0,-30],[110,0,-45],[125,0,-80],[100,0,-120],[60,0,-145],[20,0,-135],[-5,0,-105],[-45,0,-95],[-85,0,-120],[-125,0,-105],[-145,0,-65],[-125,0,-25],[-90,0,0],[-100,0,35],[-130,0,65],[-105,0,105],[-60,0,140]]
+ canyon: [[0,0,160],[48,0,158],[86,0,132],[105,0,92],[102,0,55],[82,0,30],[48,0,24],[22,0,4],[18,0,-28],[42,0,-48],[78,0,-52],[92,0,-82],[70,0,-112],[42,0,-126],[8,0,-116],[-8,0,-88],[-38,0,-72],[-72,0,-84],[-106,0,-112],[-142,0,-96],[-156,0,-60],[-136,0,-25],[-100,0,-10],[-72,0,18],[-88,0,54],[-72,0,88],[-38,0,118],[-8,0,144]],
+ neon: [[0,0,165],[70,0,165],[112,0,138],[112,0,98],[78,0,76],[42,0,84],[22,0,58],[48,0,30],[98,0,18],[135,0,-8],[122,0,-45],[86,0,-56],[48,0,-42],[20,0,-62],[32,0,-100],[62,0,-132],[34,0,-160],[-8,0,-150],[-26,0,-116],[-58,0,-94],[-100,0,-112],[-142,0,-88],[-146,0,-48],[-112,0,-22],[-80,0,8],[-98,0,44],[-128,0,76],[-96,0,116],[-48,0,148]]
 };
 const selectedTrack = trackNames[requestedTrack] ? requestedTrack : 'coast';
 const controlPoints = trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
@@ -207,56 +207,115 @@ for (let i = 0; i < N; i += 8) {
   }
 }
 
-// Distant low-poly mountain silhouettes. Kept well outside the track and barriers
-// so scenery cannot overlap the racing surface or block the player's view.
-for (let i = 0; i < 52; i++) {
-  const angle = i * 2.399;
-  const radius = 330 + (i % 6) * 28;
-  const height = 24 + (i * 17 % 48);
-  const size = 14 + (i % 5) * 4;
-  const mountain = new THREE.Mesh(
-    new THREE.ConeGeometry(size, height, 6),
-    mat(i % 3 === 0 ? 0x536f48 : (i % 2 ? 0x718556 : 0x8a9a61))
-  );
-  mountain.position.set(Math.cos(angle) * radius, height / 2 - 2, Math.sin(angle) * radius);
-  mountain.rotation.y = angle * 0.37;
-  mountain.receiveShadow = true;
-  scene.add(mountain);
+// Distinct scenery for each circuit. All props are kept outside the guardrails.
+function addMountainRing() {
+  for (let i = 0; i < 58; i++) {
+    const angle = i * 2.399;
+    const radius = 335 + (i % 7) * 25;
+    const height = 26 + (i * 17 % 54);
+    const size = 16 + (i % 5) * 4;
+    const mountain = new THREE.Mesh(
+      new THREE.ConeGeometry(size, height, 6),
+      mat(i % 3 === 0 ? 0x536f48 : (i % 2 ? 0x718556 : 0x8a9a61))
+    );
+    mountain.position.set(Math.cos(angle) * radius, height / 2 - 2, Math.sin(angle) * radius);
+    mountain.rotation.y = angle * 0.37;
+    scene.add(mountain);
+  }
 }
-
-// Ocean along the eastern coastline, below the road level.
-const oceanMat = new THREE.MeshStandardMaterial({
-  color: 0x247fa0, roughness: 0.28, metalness: 0.16
-});
-const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1500), oceanMat);
-ocean.rotation.x = -Math.PI / 2;
-ocean.position.set(830, -3.1, 0);
-scene.add(ocean);
-const coastCliffs = mat(0x655c4d, 1);
-for (let i = 0; i < 22; i++) {
-  const rock = new THREE.Mesh(
-    new THREE.ConeGeometry(11 + (i % 4) * 3, 18 + (i % 5) * 5, 7),
-    coastCliffs
+function addCoastalScenery() {
+  addMountainRing();
+  const ocean = new THREE.Mesh(
+    new THREE.PlaneGeometry(1400, 1500),
+    new THREE.MeshStandardMaterial({ color: 0x167fa8, roughness: 0.24, metalness: 0.18 })
   );
-  // Decorative rocks are placed far beyond the circuit, never on the road.
-  rock.position.set(300 + (i % 4) * 18, -3 + (i % 3), -260 + i * 24);
-  rock.rotation.z = (i % 2 ? 0.18 : -0.12);
-  scene.add(rock);
+  ocean.rotation.x = -Math.PI / 2;
+  ocean.position.set(830, -3.1, 0);
+  scene.add(ocean);
+  const cliffRock = mat(0x777363, 1);
+  for (let i = 0; i < 22; i++) {
+    const rock = new THREE.Mesh(new THREE.ConeGeometry(12 + (i % 4) * 4, 20 + (i % 5) * 6, 7), cliffRock);
+    rock.position.set(300 + (i % 4) * 20, -3 + (i % 3), -260 + i * 24);
+    rock.rotation.z = i % 2 ? 0.18 : -0.12;
+    scene.add(rock);
+  }
+  const cliff = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 20), cliffRock);
+  cliff.position.set(-290, 4, 220);
+  scene.add(cliff);
+  const waterfall = new THREE.Mesh(new THREE.PlaneGeometry(8, 23), new THREE.MeshStandardMaterial({
+    color: 0x82d6ee, emissive: 0x1a6d91, emissiveIntensity: 0.28,
+    transparent: true, opacity: 0.82, roughness: 0.22, side: THREE.DoubleSide
+  }));
+  waterfall.position.set(-279, 0, 223);
+  waterfall.rotation.y = -0.18;
+  scene.add(waterfall);
 }
-
-// A distant waterfall adds a landmark to the coastal course.
-const cliffRock = mat(0x7a7564, 1);
-const cliff = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 20), cliffRock);
-cliff.position.set(-290, 4, 220);
-scene.add(cliff);
-const waterfallMat = new THREE.MeshStandardMaterial({
-  color: 0x82d6ee, emissive: 0x1a6d91, emissiveIntensity: 0.28,
-  transparent: true, opacity: 0.82, roughness: 0.22, side: THREE.DoubleSide
-});
-const waterfall = new THREE.Mesh(new THREE.PlaneGeometry(8, 23), waterfallMat);
-waterfall.position.set(-279, 0, 223);
-waterfall.rotation.y = -0.18;
-scene.add(waterfall);
+function addCanyonScenery() {
+  const sandstone = [0xb86f43, 0x9c5738, 0xd18a55, 0x80503a];
+  for (let i = 0; i < 64; i++) {
+    const angle = i * 2.399;
+    const radius = 250 + (i % 6) * 24;
+    const height = 28 + (i * 13 % 65);
+    const width = 17 + (i % 4) * 7;
+    const rock = new THREE.Mesh(
+      new THREE.CylinderGeometry(width * 0.72, width, height, 5, 1),
+      mat(sandstone[i % sandstone.length], 1)
+    );
+    rock.position.set(Math.cos(angle) * radius, height / 2 - 1, Math.sin(angle) * radius);
+    rock.rotation.y = angle * 0.6;
+    scene.add(rock);
+    if (i % 3 === 0) {
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(width * 2.3, 5, width * 1.8), mat(sandstone[(i + 1) % sandstone.length], 1));
+      cap.position.set(rock.position.x, height + 1, rock.position.z);
+      cap.rotation.y = angle * 0.6;
+      scene.add(cap);
+    }
+  }
+  // Tall canyon walls frame the course without touching the road.
+  for (const sideSign of [-1, 1]) {
+    for (let i = 0; i < 12; i++) {
+      const z = -260 + i * 48;
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(22 + (i % 3) * 8, 42 + (i % 4) * 8, 42), mat(sandstone[i % sandstone.length], 1));
+      wall.position.set(sideSign * (265 + (i % 2) * 22), wall.geometry.parameters.height / 2 - 1, z);
+      wall.rotation.y = sideSign * (i % 3 - 1) * 0.08;
+      scene.add(wall);
+    }
+  }
+}
+function addUrbanScenery() {
+  const buildingMats = [0x182b46, 0x243954, 0x263044, 0x33435e];
+  const windowMat = new THREE.MeshBasicMaterial({ color: 0x25dfff });
+  for (let i = 0; i < 76; i++) {
+    const angle = i * 2.399;
+    const radius = 235 + (i % 8) * 22;
+    const height = 22 + (i * 19 % 92);
+    const width = 12 + (i % 4) * 5;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, width), mat(buildingMats[i % buildingMats.length], 0.72, 0.18));
+    building.position.set(x, height / 2 - 0.8, z);
+    scene.add(building);
+    if (i % 2 === 0) {
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 1.1, 0.35), windowMat);
+      sign.position.set(x, Math.min(height - 3, height * 0.68), z + width / 2 + 0.22);
+      scene.add(sign);
+    }
+  }
+  // Neon light strips around the outside of the circuit.
+  for (let i = 0; i < 30; i++) {
+    const angle = i * Math.PI * 2 / 30;
+    const radius = 190;
+    const light = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 5), new THREE.MeshBasicMaterial({
+      color: i % 2 ? 0xff3bc8 : 0x20dfff
+    }));
+    light.position.set(Math.cos(angle) * radius, 1.2, Math.sin(angle) * radius);
+    light.rotation.y = -angle;
+    scene.add(light);
+  }
+}
+if (selectedTrack === 'coast') addCoastalScenery();
+else if (selectedTrack === 'canyon') addCanyonScenery();
+else addUrbanScenery();
 
 // Detailed compact sports cars built from simple meshes.
 const bluePaint = new THREE.MeshStandardMaterial({
