@@ -540,6 +540,9 @@ document.getElementById('play-button').addEventListener('click', () => {
   countdown = 3.5;
   document.getElementById('start-countdown').classList.add('visible');
 });
+document.getElementById('exit-button').addEventListener('click', () => {
+  document.querySelector('#main-menu .menu-subtitle').textContent = 'Você pode fechar esta aba para sair do jogo.';
+});
 document.getElementById('open-settings').addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   settingsScreen.classList.remove('hidden');
