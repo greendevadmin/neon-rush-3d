@@ -611,22 +611,33 @@ function animate() {
     }
     const distanceFromTrack = Math.sqrt(nearestDistanceSq);
 
-    // Guardrail collision: stop the car crossing the visible barriers and
-    // reflect its heading away from the impact instead of snapping to the road.
+    // Wall ride: the barrier prevents the car from passing through it, but
+    // the car slides along the rail instead of bouncing backward or stopping.
     const trackSide = side(nearestIndex);
     const fromCenter = playerPosition.clone().sub(path[nearestIndex]);
     const signedOffset = fromCenter.dot(trackSide);
     const barrierLimit = ROAD_WIDTH * 0.5 + KERB_WIDTH + 0.35;
     if (Math.abs(signedOffset) > barrierLimit) {
-      const sign = Math.sign(signedOffset);
+      const sign = Math.sign(signedOffset) || 1;
       playerPosition.addScaledVector(trackSide, sign * barrierLimit - signedOffset);
       const normal = trackSide.multiplyScalar(sign);
       const impactDirection = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
-      if (impactDirection.dot(normal) > 0) {
-        impactDirection.addScaledVector(normal, -2 * impactDirection.dot(normal)).normalize();
-        playerHeading = Math.atan2(impactDirection.x, impactDirection.z);
+      const outwardSpeed = impactDirection.dot(normal);
+      if (outwardSpeed > 0) {
+        // Remove only the velocity component into the wall. Keep the forward
+        // component so steering along the barrier feels like Mario Kart.
+        impactDirection.addScaledVector(normal, -outwardSpeed);
+        if (impactDirection.lengthSq() > 0.0001) {
+          impactDirection.normalize();
+          playerHeading = Math.atan2(impactDirection.x, impactDirection.z);
+        } else {
+          const trackTangent = tangent(nearestIndex);
+          playerHeading = Math.atan2(trackTangent.x, trackTangent.z);
+        }
+        speed *= 0.94;
+      } else {
+        speed *= 0.985;
       }
-      speed *= 0.42;
       forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
     } else if (distanceFromTrack > ROAD_WIDTH * 0.5 + KERB_WIDTH) {
       speed = Math.max(0, speed - (7 + distanceFromTrack * 0.09) * dt);
@@ -673,11 +684,13 @@ function animate() {
         const overlap = collisionDistance - distance;
         playerPosition.x += nx * overlap;
         playerPosition.z += nz * overlap;
-        speed *= 0.58;
+        speed *= 0.78;
+        // Side impacts deflect the car gently rather than reversing its heading.
         const direction = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
         const normal = new THREE.Vector3(nx, 0, nz);
-        if (direction.dot(normal) < 0) {
-          direction.addScaledVector(normal, -2 * direction.dot(normal)).normalize();
+        const intoCar = direction.dot(normal);
+        if (intoCar < -0.12) {
+          direction.addScaledVector(normal, -intoCar * 0.42).normalize();
           playerHeading = Math.atan2(direction.x, direction.z);
         }
         forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
