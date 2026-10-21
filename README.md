@@ -24,3 +24,6 @@ O projeto usa Three.js por CDN e pode ser publicado pelo GitHub Pages:
 - Tela de chegada e opção de reiniciar
 
 O jogo requer conexão com a internet para carregar o Three.js da CDN.
+
+- Modo de condução manual explícito, com botões táteis para acelerar, frear, virar e usar nitro em telas pequenas
+- Circuito ampliado com curvas adicionais e mudanças de direção mais variadas
