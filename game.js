@@ -421,6 +421,10 @@ let countdown = 3.5;
 let playerProgress = 0;
 let s = 0;
 let currentLap = 1;
+let completedLaps = 0;
+let lastNearestIndex = 0;
+const playerPosition = path[0].clone();
+let playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
 let raceTime = 0;
 let raceFinished = false;
 let lateral = 0;
@@ -488,6 +492,12 @@ function restartRace() {
   playerProgress = 0;
   s = 0;
   currentLap = 1;
+  completedLaps = 0;
+  lastNearestIndex = 0;
+  playerPosition.copy(path[0]);
+  playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
+  car.position.copy(playerPosition);
+  car.rotation.y = playerHeading;
   raceTime = 0;
   countdown = 3.5;
   raceFinished = false;
@@ -530,8 +540,9 @@ function updatePickups(items, dt, type) {
     if (item.collected) continue;
     item.mesh.rotation.y += dt * (type === 'coin' ? 1.8 : 1.1);
     item.mesh.position.y = (type === 'coin' ? 1.32 : 1.45) + Math.sin(clock.elapsedTime * 2.5 + item.s) * 0.12;
-    const along = Math.abs(circularDifference(item.s, s)) * spacing;
-    if (along < 3.1 && Math.abs(lateral - item.off) < 2.05) {
+    const dx = item.mesh.position.x - playerPosition.x;
+    const dz = item.mesh.position.z - playerPosition.z;
+    if (Math.hypot(dx, dz) < 3.2) {
       item.collected = true;
       item.mesh.visible = false;
       if (type === 'coin') {
@@ -577,24 +588,50 @@ function animate() {
     speed = THREE.MathUtils.clamp(speed, 0, usingNitro ? 58 : 42);
     if (!accelerating && !usingNitro && speed < 0.35) speed = 0;
 
-    lateral += steering * dt * (2.5 + speed * 0.105);
-    const edge = ROAD_WIDTH / 2 - 1.05;
-    if (Math.abs(lateral) > edge) {
-      lateral = THREE.MathUtils.clamp(lateral, -edge, edge);
-      speed *= 0.9;
+    // Manual driving: steering changes the car's heading; the track never
+    // pulls the player back onto its spline.
+    if (raceCanMove && speed > 0.5) {
+      const turnRate = 0.72 + Math.min(speed, 42) * 0.018;
+      playerHeading += steering * turnRate * dt;
     }
-    lateral *= Math.pow(0.989, dt * 60);
-    // The player's car advances only from manually generated speed; no auto-drive.
-    if (accelerating || speed > 0) playerProgress += speed * dt / spacing;
-    s = wrap(playerProgress);
-    currentLap = Math.min(TOTAL_LAPS, Math.floor(playerProgress / N) + 1);
-    document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
-    if (countdown <= 0 && playerProgress >= TOTAL_LAPS * N) finishRace();
+    const forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+    if (raceCanMove && speed > 0) playerPosition.addScaledVector(forward, speed * dt);
 
-    const player = pose(s, lateral);
-    car.position.copy(player.p);
+    // Find the nearest centerline sample only for lap detection and off-road grip.
+    let nearestIndex = 0;
+    let nearestDistanceSq = Infinity;
+    for (let i = 0; i < N; i++) {
+      const dx = path[i].x - playerPosition.x;
+      const dz = path[i].z - playerPosition.z;
+      const distanceSq = dx * dx + dz * dz;
+      if (distanceSq < nearestDistanceSq) {
+        nearestDistanceSq = distanceSq;
+        nearestIndex = i;
+      }
+    }
+    const distanceFromTrack = Math.sqrt(nearestDistanceSq);
+    if (distanceFromTrack > ROAD_WIDTH * 0.5 + KERB_WIDTH) {
+      speed = Math.max(0, speed - (7 + distanceFromTrack * 0.09) * dt);
+    }
+
+    // Count a lap only when the car genuinely crosses the start area forward.
+    const startDistance = Math.hypot(playerPosition.x - path[0].x, playerPosition.z - path[0].z);
+    const forwardAtStart = forward.dot(tangent(0));
+    if (raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
+        startDistance < ROAD_WIDTH * 1.5 && forwardAtStart > 0.15) {
+      completedLaps++;
+      if (completedLaps >= TOTAL_LAPS) finishRace();
+    }
+    lastNearestIndex = nearestIndex;
+    s = nearestIndex;
+    playerProgress = completedLaps * N + nearestIndex;
+    currentLap = Math.min(TOTAL_LAPS, completedLaps + 1);
+    document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
+
+    car.position.copy(playerPosition);
     car.position.y = 0;
-    car.rotation.y = Math.atan2(player.t.x, player.t.z) - steering * 0.035;
+    car.rotation.y = playerHeading;
+    const player = { p: playerPosition, t: forward };
 
     for (const rival of rivals) {
       if (countdown <= 0) rival.progress += rival.pace * dt / spacing;
