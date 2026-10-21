@@ -1,6 +1,6 @@
-# Neon Rush 3D — corrida de circuito
+# Overdrive — corrida de circuito
 
-Neon Rush é um jogo de corrida arcade 3D no navegador. Corra contra cinco competidores em um circuito fechado de três voltas, colete moedas, use nitro e tente terminar em primeiro lugar.
+Overdrive é um jogo de corrida arcade 3D no navegador. Corra contra cinco competidores em um circuito fechado de três voltas, colete moedas, use nitro e tente terminar em primeiro lugar.
 
 ## Publicação
 O projeto usa Three.js por CDN e pode ser publicado pelo GitHub Pages:
