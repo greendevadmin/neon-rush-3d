@@ -573,7 +573,7 @@ function animate() {
     document.getElementById('race-time').textContent = formatRaceTime(raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
-    const steering = (keys.a || keys.arrowleft ? -1 : 0) + (keys.d || keys.arrowright ? 1 : 0);
+    const steering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
     const usingNitro = countdown <= 0 && (keys[' '] || keys.shift) && nitro > 3 && speed > 3;
     if (usingNitro) {
       speed += 27 * dt;
