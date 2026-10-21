@@ -533,9 +533,19 @@ document.getElementById('restart-button').addEventListener('click', restartRace)
 
 const mainMenu = document.getElementById('main-menu');
 const settingsScreen = document.getElementById('settings-screen');
+const modeScreen = document.getElementById('mode-screen');
 document.getElementById('play-button').addEventListener('click', () => {
-  menuOpen = false;
   mainMenu.classList.add('hidden');
+  settingsScreen.classList.add('hidden');
+  modeScreen.classList.remove('hidden');
+});
+document.getElementById('back-to-menu').addEventListener('click', () => {
+  modeScreen.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+});
+document.getElementById('classic-track-button').addEventListener('click', () => {
+  menuOpen = false;
+  modeScreen.classList.add('hidden');
   settingsScreen.classList.add('hidden');
   countdown = 3.5;
   document.getElementById('start-countdown').classList.add('visible');
