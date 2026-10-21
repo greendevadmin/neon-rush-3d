@@ -129,10 +129,10 @@ kbd{display:inline-block;padding:2px 5px;border:1px solid #36566a;border-radius:
 /* Cinematic main menu inspired by the supplied Neon Rush concept. */
 .menu-screen{padding:0;place-items:stretch start;background:#020b18}
 .menu-backdrop{background:
-  linear-gradient(90deg,rgba(2,10,23,.99) 0%,rgba(2,12,27,.96) 24%,rgba(2,13,29,.79) 39%,rgba(3,17,34,.20) 69%,rgba(3,17,34,.04) 100%),
-  radial-gradient(ellipse at 78% 35%,rgba(0,183,255,.16),transparent 38%),
-  linear-gradient(0deg,rgba(1,7,18,.82),transparent 40%),
-  repeating-linear-gradient(135deg,transparent 0 45px,rgba(24,199,255,.025) 46px 48px)}
+  linear-gradient(90deg,rgba(2,10,23,.98) 0%,rgba(2,12,27,.91) 25%,rgba(2,13,29,.68) 43%,rgba(3,17,34,.12) 75%,rgba(3,17,34,.08) 100%),
+  linear-gradient(0deg,rgba(1,7,18,.78),transparent 48%),
+  url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1800&q=90') center 56%/cover no-repeat,
+  linear-gradient(135deg,#09253f,#087aa3 55%,#ff8748)}
 .menu-content{align-self:center;width:min(40vw,590px);min-width:410px;margin-left:clamp(24px,6.5vw,115px);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;text-align:left}
 .menu-kicker{font-size:clamp(9px,.85vw,13px);letter-spacing:4px;color:#27dfff}
 .game-logo{margin:18px 0 18px;font-size:clamp(60px,7.4vw,116px);line-height:.78;letter-spacing:-5px;font-weight:1000;font-style:italic;text-shadow:0 0 9px #08bfff,0 6px 0 #09213b,0 12px 28px #00bfff55}
