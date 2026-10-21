@@ -125,3 +125,41 @@ canvas{display:block;position:fixed;inset:0;z-index:0}
 .settings-controls p span{color:#19d9ff}
 kbd{display:inline-block;padding:2px 5px;border:1px solid #36566a;border-radius:4px;background:#10283a;color:#f3fbff;font:inherit;font-weight:900}
 @media(max-width:640px){.menu-screen{padding:14px}.menu-content,.settings-card{padding:24px 20px}.game-logo{font-size:48px}.menu-subtitle{margin-bottom:21px}.setting-row{gap:10px}.sensitivity-control{min-width:125px}.sensitivity-control input{width:80px}.settings-controls{padding:12px}}
+
+/* Cinematic main menu inspired by the supplied Neon Rush concept. */
+.menu-screen{padding:0;place-items:stretch start;background:#020b18}
+.menu-backdrop{background:
+  linear-gradient(90deg,rgba(2,10,23,.99) 0%,rgba(2,12,27,.96) 24%,rgba(2,13,29,.79) 39%,rgba(3,17,34,.20) 69%,rgba(3,17,34,.04) 100%),
+  radial-gradient(ellipse at 78% 35%,rgba(0,183,255,.16),transparent 38%),
+  linear-gradient(0deg,rgba(1,7,18,.82),transparent 40%),
+  repeating-linear-gradient(135deg,transparent 0 45px,rgba(24,199,255,.025) 46px 48px)}
+.menu-content{align-self:center;width:min(40vw,590px);min-width:410px;margin-left:clamp(24px,6.5vw,115px);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;text-align:left}
+.menu-kicker{font-size:clamp(9px,.85vw,13px);letter-spacing:4px;color:#27dfff}
+.game-logo{margin:18px 0 18px;font-size:clamp(60px,7.4vw,116px);line-height:.78;letter-spacing:-5px;font-weight:1000;font-style:italic;text-shadow:0 0 9px #08bfff,0 6px 0 #09213b,0 12px 28px #00bfff55}
+.game-logo span{color:#00dfff}
+.game-logo small{display:block;margin-top:20px;font-size:clamp(22px,2.8vw,40px);letter-spacing:10px;color:#e5f7ff;text-shadow:0 0 14px #00aaff}
+.menu-subtitle{margin:28px 0 35px;color:#36dfff;font-size:clamp(10px,1.1vw,16px);font-weight:900;font-style:italic;letter-spacing:4px}
+.menu-actions{display:flex;flex-direction:column;gap:12px;width:min(100%,470px)}
+.menu-primary,.menu-secondary{min-height:76px;display:flex;align-items:center;gap:24px;padding:0 28px;border-radius:13px 9px 13px 9px;text-align:left;font-size:clamp(15px,1.5vw,23px);font-style:italic;letter-spacing:1px;clip-path:polygon(5% 0,100% 0,94% 100%,0 100%)}
+.menu-primary{justify-content:flex-start;background:linear-gradient(105deg,#04b9f4,#04e0ff);color:#f5fdff;border:2px solid #66efff;box-shadow:0 0 25px #00bfff7a,inset 0 0 16px #fff4}
+.menu-primary span{margin:0}
+.menu-primary .button-symbol,.menu-secondary .button-symbol{font-size:clamp(24px,2.6vw,38px);width:44px;text-align:center;color:#d8f8ff}
+.menu-secondary{margin:0;border:2px solid #3bbdf6;background:rgba(2,20,40,.7);color:#81cafa;box-shadow:0 0 13px #008dff20}
+.menu-secondary:hover{background:rgba(3,66,100,.8);border-color:#1ee6ff}
+.exit-button{min-height:64px}
+.menu-content .mode-heading{margin:25px 0 0;font-size:10px;letter-spacing:2px;color:#83aabd}
+.menu-content .mode-heading strong{color:#27dfff}
+.menu-content .future-modes{margin:12px 0 0;text-align:left;color:#547f99;font-size:9px;letter-spacing:2px}
+.menu-footer{left:clamp(24px,6.5vw,115px);right:auto;bottom:28px;text-align:left;color:#48d8ff;letter-spacing:4px}
+.settings-card{align-self:center;margin:auto;max-height:calc(100vh - 32px);overflow:auto}
+@media(max-width:760px){
+  .menu-screen{place-items:center;padding:20px}
+  .menu-backdrop{background:linear-gradient(90deg,rgba(2,10,23,.96),rgba(2,12,27,.78)),linear-gradient(0deg,rgba(1,7,18,.6),transparent)}
+  .menu-content{width:100%;min-width:0;max-width:480px;margin:0;padding:0 5px}
+  .game-logo{font-size:clamp(57px,15vw,86px);letter-spacing:-3px}
+  .menu-subtitle{margin:22px 0 25px;letter-spacing:2px}
+  .menu-actions{width:100%;gap:10px}
+  .menu-primary,.menu-secondary{min-height:61px;padding:0 18px;gap:13px}
+  .menu-content .mode-heading{margin-top:18px}
+  .menu-footer{left:20px;bottom:10px;font-size:8px;letter-spacing:2px}
+}
