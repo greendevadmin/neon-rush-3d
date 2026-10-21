@@ -555,13 +555,6 @@ document.querySelectorAll('[data-track]').forEach(button => {
     document.getElementById('start-countdown').classList.add('visible');
   });
 });
-document.getElementById('classic-track-button').addEventListener('click', () => {
-  menuOpen = false;
-  modeScreen.classList.add('hidden');
-  settingsScreen.classList.add('hidden');
-  countdown = 3.5;
-  document.getElementById('start-countdown').classList.add('visible');
-});
 document.getElementById('exit-button').addEventListener('click', () => {
   document.querySelector('#main-menu .menu-subtitle').textContent = 'Você pode fechar esta aba para sair do jogo.';
 });
