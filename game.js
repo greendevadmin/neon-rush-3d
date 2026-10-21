@@ -594,7 +594,7 @@ function animate() {
       const turnRate = 0.72 + Math.min(speed, 42) * 0.018;
       playerHeading += steering * turnRate * dt;
     }
-    const forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+    let forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
     if (raceCanMove && speed > 0) playerPosition.addScaledVector(forward, speed * dt);
 
     // Find the nearest centerline sample only for lap detection and off-road grip.
@@ -610,7 +610,25 @@ function animate() {
       }
     }
     const distanceFromTrack = Math.sqrt(nearestDistanceSq);
-    if (distanceFromTrack > ROAD_WIDTH * 0.5 + KERB_WIDTH) {
+
+    // Guardrail collision: stop the car crossing the visible barriers and
+    // reflect its heading away from the impact instead of snapping to the road.
+    const trackSide = side(nearestIndex);
+    const fromCenter = playerPosition.clone().sub(path[nearestIndex]);
+    const signedOffset = fromCenter.dot(trackSide);
+    const barrierLimit = ROAD_WIDTH * 0.5 + KERB_WIDTH + 0.35;
+    if (Math.abs(signedOffset) > barrierLimit) {
+      const sign = Math.sign(signedOffset);
+      playerPosition.addScaledVector(trackSide, sign * barrierLimit - signedOffset);
+      const normal = trackSide.multiplyScalar(sign);
+      const impactDirection = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+      if (impactDirection.dot(normal) > 0) {
+        impactDirection.addScaledVector(normal, -2 * impactDirection.dot(normal)).normalize();
+        playerHeading = Math.atan2(impactDirection.x, impactDirection.z);
+      }
+      speed *= 0.42;
+      forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+    } else if (distanceFromTrack > ROAD_WIDTH * 0.5 + KERB_WIDTH) {
       speed = Math.max(0, speed - (7 + distanceFromTrack * 0.09) * dt);
     }
 
@@ -640,6 +658,30 @@ function animate() {
       rival.mesh.position.copy(q.p);
       rival.mesh.position.y = 0;
       rival.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
+    }
+
+    // Car-to-car collision. The player is pushed out of the rival's body,
+    // loses speed on impact, and gets a small directional deflection.
+    for (const rival of rivals) {
+      const dx = playerPosition.x - rival.mesh.position.x;
+      const dz = playerPosition.z - rival.mesh.position.z;
+      const distance = Math.hypot(dx, dz);
+      const collisionDistance = 3.25;
+      if (distance < collisionDistance) {
+        const nx = distance > 0.001 ? dx / distance : Math.sin(playerHeading);
+        const nz = distance > 0.001 ? dz / distance : Math.cos(playerHeading);
+        const overlap = collisionDistance - distance;
+        playerPosition.x += nx * overlap;
+        playerPosition.z += nz * overlap;
+        speed *= 0.58;
+        const direction = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+        const normal = new THREE.Vector3(nx, 0, nz);
+        if (direction.dot(normal) < 0) {
+          direction.addScaledVector(normal, -2 * direction.dot(normal)).normalize();
+          playerHeading = Math.atan2(direction.x, direction.z);
+        }
+        forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+      }
     }
 
     updatePickups(coins, dt, 'coin');
