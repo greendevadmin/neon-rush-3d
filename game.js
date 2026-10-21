@@ -1,5 +1,14 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
+const requestedTrack = new URLSearchParams(location.search).get('track') || 'coast';
+const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
+const trackLayouts = {
+ coast: [[0,0,145],[42,0,145],[88,0,130],[126,0,100],[145,0,62],[139,0,28],[112,0,5],[83,0,-5],[71,0,-32],[91,0,-58],[104,0,-91],[88,0,-126],[55,0,-146],[15,0,-150],[-19,0,-134],[-38,0,-105],[-67,0,-91],[-99,0,-103],[-128,0,-86],[-145,0,-54],[-140,0,-20],[-117,0,5],[-101,0,31],[-113,0,59],[-106,0,91],[-81,0,119],[-48,0,137]],
+ canyon: [[0,0,150],[35,0,140],[70,0,115],[95,0,75],[105,0,35],[85,0,5],[55,0,-10],[30,0,-30],[35,0,-65],[65,0,-90],[85,0,-125],[60,0,-155],[20,0,-165],[-20,0,-150],[-45,0,-120],[-80,0,-110],[-115,0,-125],[-145,0,-100],[-150,0,-60],[-125,0,-25],[-90,0,-5],[-75,0,30],[-90,0,65],[-75,0,100],[-45,0,130]],
+ neon: [[0,0,150],[55,0,150],[100,0,130],[130,0,95],[130,0,55],[100,0,25],[65,0,25],[45,0,0],[65,0,-30],[110,0,-45],[125,0,-80],[100,0,-120],[60,0,-145],[20,0,-135],[-5,0,-105],[-45,0,-95],[-85,0,-120],[-125,0,-105],[-145,0,-65],[-125,0,-25],[-90,0,0],[-100,0,35],[-130,0,65],[-105,0,105],[-60,0,140]]
+};
+const selectedTrack = trackNames[requestedTrack] ? requestedTrack : 'coast';
+const controlPoints = trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(selectedTrack === 'neon' ? 0x172a55 : selectedTrack === 'canyon' ? 0xd99a6a : 0xf2b487);
 scene.fog = new THREE.Fog(selectedTrack === 'neon' ? 0x263c68 : selectedTrack === 'canyon' ? 0xc98d62 : 0xe8b28b, 180, 620);
@@ -42,15 +51,6 @@ scene.add(ground);
 
 // The centerline is a single CLOSED spline. This prevents the end-to-start
 // connector from cutting across the track and producing overlapping road strips.
-const requestedTrack = new URLSearchParams(location.search).get('track') || 'coast';
-const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
-const trackLayouts = {
- coast: [[0,0,145],[42,0,145],[88,0,130],[126,0,100],[145,0,62],[139,0,28],[112,0,5],[83,0,-5],[71,0,-32],[91,0,-58],[104,0,-91],[88,0,-126],[55,0,-146],[15,0,-150],[-19,0,-134],[-38,0,-105],[-67,0,-91],[-99,0,-103],[-128,0,-86],[-145,0,-54],[-140,0,-20],[-117,0,5],[-101,0,31],[-113,0,59],[-106,0,91],[-81,0,119],[-48,0,137]],
- canyon: [[0,0,150],[35,0,140],[70,0,115],[95,0,75],[105,0,35],[85,0,5],[55,0,-10],[30,0,-30],[35,0,-65],[65,0,-90],[85,0,-125],[60,0,-155],[20,0,-165],[-20,0,-150],[-45,0,-120],[-80,0,-110],[-115,0,-125],[-145,0,-100],[-150,0,-60],[-125,0,-25],[-90,0,-5],[-75,0,30],[-90,0,65],[-75,0,100],[-45,0,130]],
- neon: [[0,0,150],[55,0,150],[100,0,130],[130,0,95],[130,0,55],[100,0,25],[65,0,25],[45,0,0],[65,0,-30],[110,0,-45],[125,0,-80],[100,0,-120],[60,0,-145],[20,0,-135],[-5,0,-105],[-45,0,-95],[-85,0,-120],[-125,0,-105],[-145,0,-65],[-125,0,-25],[-90,0,0],[-100,0,35],[-130,0,65],[-105,0,105],[-60,0,140]]
-};
-const selectedTrack = trackNames[requestedTrack] ? requestedTrack : 'coast';
-const controlPoints = trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
 const path = centerCurve.getSpacedPoints(1000).slice(0, -1)
@@ -534,6 +534,7 @@ document.getElementById('restart-button').addEventListener('click', restartRace)
 const mainMenu = document.getElementById('main-menu');
 const settingsScreen = document.getElementById('settings-screen');
 const modeScreen = document.getElementById('mode-screen');
+if (new URLSearchParams(location.search).has('track')) { mainMenu.classList.add('hidden'); modeScreen.classList.remove('hidden'); }
 document.getElementById('play-button').addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   settingsScreen.classList.add('hidden');
