@@ -433,6 +433,9 @@ let nitro = 100;
 let points = 0;
 let coinCount = 0;
 let paused = false;
+let menuOpen = true;
+let steeringSensitivity = 1;
+let invertSteering = false;
 const keys = {};
 addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
@@ -528,6 +531,32 @@ function restartRace() {
 }
 document.getElementById('restart-button').addEventListener('click', restartRace);
 
+const mainMenu = document.getElementById('main-menu');
+const settingsScreen = document.getElementById('settings-screen');
+document.getElementById('play-button').addEventListener('click', () => {
+  menuOpen = false;
+  mainMenu.classList.add('hidden');
+  settingsScreen.classList.add('hidden');
+  countdown = 3.5;
+  document.getElementById('start-countdown').classList.add('visible');
+});
+document.getElementById('open-settings').addEventListener('click', () => {
+  mainMenu.classList.add('hidden');
+  settingsScreen.classList.remove('hidden');
+});
+document.getElementById('close-settings').addEventListener('click', () => {
+  settingsScreen.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+});
+document.getElementById('steering-sensitivity').addEventListener('input', event => {
+  steeringSensitivity = Number(event.target.value) / 100;
+  document.getElementById('sensitivity-value').textContent = event.target.value + '%';
+});
+document.getElementById('invert-steering').addEventListener('change', event => {
+  invertSteering = event.target.checked;
+});
+
+
 const clock = new THREE.Clock();
 function circularDifference(a, b) {
   let d = wrap(a) - wrap(b);
@@ -558,7 +587,7 @@ function updatePickups(items, dt, type) {
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
-  if (!paused && !raceFinished) {
+  if (!menuOpen && !paused && !raceFinished) {
     if (countdown > 0) {
       countdown = Math.max(0, countdown - dt);
       speed = 0;
@@ -573,7 +602,8 @@ function animate() {
     document.getElementById('race-time').textContent = formatRaceTime(raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
-    const steering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
+    const baseSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
+    const steering = baseSteering * (invertSteering ? -1 : 1);
     const usingNitro = countdown <= 0 && (keys[' '] || keys.shift) && nitro > 3 && speed > 3;
     if (usingNitro) {
       speed += 27 * dt;
@@ -591,7 +621,7 @@ function animate() {
     // Manual driving: steering changes the car's heading; the track never
     // pulls the player back onto its spline.
     if (raceCanMove && speed > 0.5) {
-      const turnRate = 0.72 + Math.min(speed, 42) * 0.018;
+      const turnRate = (0.72 + Math.min(speed, 42) * 0.018) * steeringSensitivity;
       playerHeading += steering * turnRate * dt;
     }
     let forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
