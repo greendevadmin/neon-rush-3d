@@ -43,11 +43,13 @@ scene.add(ground);
 // The centerline is a single CLOSED spline. This prevents the end-to-start
 // connector from cutting across the track and producing overlapping road strips.
 const controlPoints = [
-  [0, 0, 112], [42, 0, 112], [79, 0, 97], [106, 0, 72],
-  [116, 0, 39], [108, 0, 8], [80, 0, -13], [96, 0, -43],
-  [87, 0, -75], [60, 0, -97], [22, 0, -105], [-20, 0, -101],
-  [-57, 0, -82], [-77, 0, -54], [-75, 0, -25], [-96, 0, 0],
-  [-111, 0, 32], [-105, 0, 65], [-82, 0, 91], [-47, 0, 106]
+  [0, 0, 145], [42, 0, 145], [88, 0, 130], [126, 0, 100],
+  [145, 0, 62], [139, 0, 28], [112, 0, 5], [83, 0, -5],
+  [71, 0, -32], [91, 0, -58], [104, 0, -91], [88, 0, -126],
+  [55, 0, -146], [15, 0, -150], [-19, 0, -134], [-38, 0, -105],
+  [-67, 0, -91], [-99, 0, -103], [-128, 0, -86], [-145, 0, -54],
+  [-140, 0, -20], [-117, 0, 5], [-101, 0, 31], [-113, 0, 59],
+  [-106, 0, 91], [-81, 0, 119], [-48, 0, 137]
 ].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
@@ -436,6 +438,26 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
+// Touch controls use the same input flags as the keyboard, so the player remains
+// fully in control on phones/tablets without adding any auto-steering.
+document.querySelectorAll('[data-drive]').forEach(button => {
+  const key = button.dataset.drive;
+  const release = event => {
+    event.preventDefault();
+    keys[key] = false;
+    button.classList.remove('pressed');
+  };
+  button.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    keys[key] = true;
+    button.classList.add('pressed');
+    if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener('pointerup', release);
+  button.addEventListener('pointercancel', release);
+  button.addEventListener('lostpointercapture', release);
+});
+
 function togglePause() {
   if (raceFinished) return;
   paused = !paused;
@@ -612,7 +634,7 @@ function animate() {
     if (coins.some(c => !c.collected) && Math.floor(clock.elapsedTime) % 18 < 6) {
       hint.textContent = 'PEGUE AS MOEDAS • ESPAÇO PARA USAR O NITRO';
     } else {
-      hint.textContent = 'WASD / SETAS PARA DIRIGIR • ESC PARA PAUSAR';
+      hint.textContent = 'MODO MANUAL • WASD / SETAS PARA DIRIGIR • ESC PARA PAUSAR';
     }
   } else {
     camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
