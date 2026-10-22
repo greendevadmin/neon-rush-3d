@@ -416,12 +416,12 @@ if (requestedMode !== 'escape') {
   // Rivals start ahead of the player; their positions and pace are updated by the AI.
   const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
-  const startProgress = (i + 1) * 22;
+  const startProgress = START_GRID_INDEX + (i + 1) * 7;
   rivals.push({
     mesh,
     progress: startProgress,
     s: wrap(startProgress),
-    off: i % 2 ? 2.7 : -2.6,
+    off: i % 2 ? 2.7 : -2.7,
     coins: 0,
     speed: 0,
     targetSpeed: 29 + i * 1.6
@@ -482,11 +482,67 @@ for (let i = 0; i < 10; i++) {
   scene.add(ring);
   coins.push({ mesh: ring, s, off, startS: s, startOff: off, collected: false, respawnAt: 0 });
 }
-// Nitro pickups removed; the racing surface stays clear.
+// Recharging nitro crystals: each collected crystal respawns farther ahead.
+const nitroCrystals = [];
+let nitro = 100;
+const crystalMaterial = new THREE.MeshStandardMaterial({
+  color: 0x24eaff, emissive: 0x00aaff, emissiveIntensity: 1.15,
+  metalness: 0.3, roughness: 0.2
+});
+if (requestedMode !== 'escape') {
+  for (let i = 0; i < 6; i++) {
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.78, 0), crystalMaterial);
+    mesh.castShadow = true;
+    scene.add(mesh);
+    const crystalS = (START_GRID_INDEX + 48 + i * Math.floor(N / 7)) % N;
+    const off = i % 2 ? -2.4 : 2.4;
+    const q = pose(crystalS, off);
+    mesh.position.copy(q.p).add(new THREE.Vector3(0, 1.35, 0));
+    nitroCrystals.push({ mesh, s: crystalS, off, collected: false, respawnAt: 0 });
+  }
+}
+function updateNitroCrystals(dt) {
+  for (let i = 0; i < nitroCrystals.length; i++) {
+    const crystal = nitroCrystals[i];
+    if (crystal.collected && clock.elapsedTime >= crystal.respawnAt) {
+      crystal.s = wrap(playerProgress + 65 + i * 18);
+      crystal.off = i % 2 ? -2.4 : 2.4;
+      const q = pose(crystal.s, crystal.off);
+      crystal.mesh.position.copy(q.p).add(new THREE.Vector3(0, 1.35, 0));
+      crystal.mesh.visible = true;
+      crystal.collected = false;
+    }
+    if (crystal.collected) continue;
+    crystal.mesh.rotation.y += dt * 1.8;
+    crystal.mesh.position.y = 1.35 + Math.sin(clock.elapsedTime * 3 + i) * 0.16;
+    if (Math.hypot(crystal.mesh.position.x - playerPosition.x, crystal.mesh.position.z - playerPosition.z) < 3.4) {
+      crystal.collected = true;
+      crystal.mesh.visible = false;
+      crystal.respawnAt = clock.elapsedTime + 2.5;
+      nitro = Math.min(100, nitro + 35);
+      points += 50;
+    }
+  }
+  const fill = document.getElementById('nitro-fill');
+  if (fill) fill.style.width = nitro.toFixed(1) + '%';
+  const label = document.getElementById('nitro-percent');
+  if (label) label.textContent = Math.round(nitro) + '%';
+}
 
 // A real minimap path follows the repaired track.
 const mapPath = document.getElementById('maptrack');
 const playerMarker = document.getElementById('player-marker');
+const rivalMarkers = [];
+if (requestedMode !== 'escape') {
+  for (let i = 0; i < 5; i++) {
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    marker.setAttribute('r', '4.2');
+    marker.setAttribute('class', 'rival-marker');
+    marker.setAttribute('data-rival', String(i));
+    document.getElementById('minimap').appendChild(marker);
+    rivalMarkers.push(marker);
+  }
+}
 const minX = Math.min(...path.map(p => p.x));
 const maxX = Math.max(...path.map(p => p.x));
 const minZ = Math.min(...path.map(p => p.z));
@@ -511,8 +567,9 @@ let s = 0;
 let currentLap = 1;
 let completedLaps = 0;
 let lastNearestIndex = 0;
-const playerPosition = path[0].clone();
-let playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
+const START_GRID_INDEX = 8; // Everyone lines up just beyond the start/finish stripe.
+const playerPosition = pose(START_GRID_INDEX, -2.7).p;
+let playerHeading = Math.atan2(tangent(START_GRID_INDEX).x, tangent(START_GRID_INDEX).z);
 let raceTime = 0;
 let raceFinished = false;
 let survivalTime = 0;
@@ -611,13 +668,13 @@ function finishRace(caught = false) {
   document.getElementById('pause-overlay').classList.remove('visible');
 }
 function restartRace() {
-  playerProgress = 0;
-  s = 0;
+  playerProgress = START_GRID_INDEX;
+  s = START_GRID_INDEX;
   currentLap = 1;
   completedLaps = 0;
-  lastNearestIndex = 0;
-  playerPosition.copy(path[0]);
-  playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
+  lastNearestIndex = START_GRID_INDEX;
+  playerPosition.copy(pose(START_GRID_INDEX, -2.7).p);
+  playerHeading = Math.atan2(tangent(START_GRID_INDEX).x, tangent(START_GRID_INDEX).z);
   car.position.copy(playerPosition);
   car.rotation.y = playerHeading;
   raceTime = 0;
@@ -631,10 +688,20 @@ function restartRace() {
 
   points = 0;
   coinCount = 0;
+  nitro = 100;
+  nitroCrystals.forEach((crystal, i) => {
+    crystal.s = (START_GRID_INDEX + 48 + i * Math.floor(N / 7)) % N;
+    crystal.off = i % 2 ? -2.4 : 2.4;
+    const q = pose(crystal.s, crystal.off);
+    crystal.mesh.position.copy(q.p).add(new THREE.Vector3(0, 1.35, 0));
+    crystal.mesh.visible = true;
+    crystal.collected = false;
+    crystal.respawnAt = 0;
+  });
   paused = false;
   for (const key in keys) keys[key] = false;
   rivals.forEach((r, i) => {
-    r.progress = (i + 1) * 22;
+    r.progress = START_GRID_INDEX + (i + 1) * 7;
     r.s = wrap(r.progress);
     r.coins = 0;
     r.speed = 0;
@@ -798,14 +865,16 @@ function animate() {
     document.getElementById('race-time').textContent = formatRaceTime(requestedMode === 'escape' ? survivalTime : raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
+    const usingNitro = requestedMode !== 'escape' && countdown <= 0 && nitro > 0 && (keys.shift || keys[' ']);
+    if (usingNitro) nitro = Math.max(0, nitro - 34 * dt);
     const baseSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
     const steering = baseSteering * (invertSteering ? -1 : 1);
     
-    const engineAcceleration = countdown <= 0 && accelerating ? 20 : 0;
+    const engineAcceleration = countdown <= 0 && accelerating ? (usingNitro ? 34 : 20) : 0;
     const brakeForce = countdown <= 0 && braking ? 34 : 0;
     const rollingResistance = speed > 0 ? (accelerating ? 1.2 : 11.5) : 0;
     speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
-    const maxSpeedKmh = 99 + coinCount * 20;
+    const maxSpeedKmh = 99 + coinCount * 20 + (usingNitro ? 70 : 0);
     speed = THREE.MathUtils.clamp(speed, 0, maxSpeedKmh / 3);
     if (!accelerating && speed < 0.35) speed = 0;
 
@@ -969,6 +1038,7 @@ function animate() {
     }
 
     updatePickups(coins, dt);
+    updateNitroCrystals(dt);
 
     const behind = player.p.clone().addScaledVector(player.t, -10.8);
     behind.y += 5.2;
@@ -991,6 +1061,12 @@ function animate() {
       (marker.x - 5) + ',' + (marker.y + 5) + ' ' + (marker.x + 5) + ',' + (marker.y + 5));
     playerMarker.setAttribute('transform', 'rotate(' +
       (-Math.atan2(player.t.x, player.t.z) * 180 / Math.PI) + ' ' + marker.x + ' ' + marker.y + ')');
+    for (let i = 0; i < rivalMarkers.length; i++) {
+      const rival = rivals[i];
+      const rivalPoint = mapXY(rival.mesh.position);
+      rivalMarkers[i].setAttribute('cx', rivalPoint.x.toFixed(1));
+      rivalMarkers[i].setAttribute('cy', rivalPoint.y.toFixed(1));
+    }
 
     const hint = document.getElementById('hint');
     hint.textContent = requestedMode === 'escape' ? 'FUJA DA POLÍCIA • PEGUE MOEDAS • NÃO SEJA CAPTURADO' : 'PISTA LIVRE • PEGUE AS MOEDAS • MODO MANUAL';
