@@ -11,6 +11,7 @@ const trackLayouts = {
 };
 const escapeMode = requestedMode === 'escape';
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
+const START_GRID_INDEX = 8; // Everyone lines up just beyond the start/finish stripe.
 const controlPoints = requestedMode === 'escape'
   ? Array.from({ length: 3000 }, (_, i) => {
       const z = i * 18;
@@ -567,7 +568,6 @@ let s = 0;
 let currentLap = 1;
 let completedLaps = 0;
 let lastNearestIndex = 0;
-const START_GRID_INDEX = 8; // Everyone lines up just beyond the start/finish stripe.
 const playerPosition = pose(START_GRID_INDEX, -2.7).p;
 let playerHeading = Math.atan2(tangent(START_GRID_INDEX).x, tangent(START_GRID_INDEX).z);
 let raceTime = 0;
