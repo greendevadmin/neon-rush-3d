@@ -1,6 +1,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const queryParams = new URLSearchParams(location.search);\nconst requestedMode = queryParams.get('mode') === 'escape' ? 'escape' : 'classic';\nconst requestedTrack = queryParams.get('track') || 'coast';
+const queryParams = new URLSearchParams(location.search);
+const requestedMode = queryParams.get('mode') === 'escape' ? 'escape' : 'classic';
+const requestedTrack = queryParams.get('track') || 'coast';
 const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
 const trackLayouts = {
  coast: [[0,0,145],[42,0,145],[88,0,130],[126,0,100],[145,0,62],[139,0,28],[112,0,5],[83,0,-5],[71,0,-32],[91,0,-58],[104,0,-91],[88,0,-126],[55,0,-146],[15,0,-150],[-19,0,-134],[-38,0,-105],[-67,0,-91],[-99,0,-103],[-128,0,-86],[-145,0,-54],[-140,0,-20],[-117,0,5],[-101,0,31],[-113,0,59],[-106,0,91],[-81,0,119],[-48,0,137]],
@@ -386,7 +388,10 @@ function makeCar(color, police = false) {
 
 const car = makeCar(0x087cf0);
 scene.add(car);
-const rivals = [];\nconst police = [];\nlet policeGap = 72;\nlet escapeCaught = false;
+const rivals = [];
+const police = [];
+let policeGap = 72;
+let escapeCaught = false;
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 for (let i = 0; i < 5; i++) {
   // Rivals start ahead of the player; their positions and pace are updated by the AI.
@@ -474,7 +479,8 @@ let lastNearestIndex = 0;
 const playerPosition = path[0].clone();
 let playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
 let raceTime = 0;
-let raceFinished = false;\nlet survivalTime = 0;
+let raceFinished = false;
+let survivalTime = 0;
 let lateral = 0;
 let speed = 0;
 
@@ -659,7 +665,8 @@ function updatePickups(items, dt) {
       item.mesh.visible = false;
       points += 100;
       coinCount++;
-      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;\n      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
+      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
+      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
     }
   }
 }
@@ -808,7 +815,18 @@ function animate() {
       }
     }
 
-    if (requestedMode === 'escape' && raceCanMove) {\n      policeGap = Math.max(3.1, policeGap - dt * (0.24 + survivalTime * 0.012));\n      for (const cop of police) {\n        const copProgress = playerProgress - policeGap - cop.delay;\n        const q = pose(copProgress, cop.offset);\n        cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;\n        cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);\n      }\n      if (policeGap <= 4.2) { finishRace(true); }\n    }\n\n    // Car-to-car collision. The player is pushed out of the rival's body,
+    if (requestedMode === 'escape' && raceCanMove) {
+      policeGap = Math.max(3.1, policeGap - dt * (0.24 + survivalTime * 0.012));
+      for (const cop of police) {
+        const copProgress = playerProgress - policeGap - cop.delay;
+        const q = pose(copProgress, cop.offset);
+        cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;
+        cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
+      }
+      if (policeGap <= 4.2) { finishRace(true); }
+    }
+
+    // Car-to-car collision. The player is pushed out of the rival's body,
     // loses speed on impact, and gets a small directional deflection.
     for (const rival of rivals) {
       const dx = playerPosition.x - rival.mesh.position.x;
