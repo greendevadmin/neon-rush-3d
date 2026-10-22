@@ -2,12 +2,6 @@
 
 Overdrive é um jogo de corrida arcade 3D no navegador. Corra contra cinco competidores em um circuito fechado de três voltas, colete moedas, use nitro e tente terminar em primeiro lugar.
 
-## Publicação
-O projeto usa Three.js por CDN e pode ser publicado pelo GitHub Pages:
-1. Abra Settings → Pages no repositório.
-2. Em Build and deployment, escolha Deploy from a branch.
-3. Selecione a branch `main` e a pasta `/(root)`, depois clique em Save.
-
 ## Controles
 - W ou seta para cima: acelerar
 - S ou seta para baixo: frear
