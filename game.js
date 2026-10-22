@@ -419,8 +419,10 @@ const coinGold = new THREE.MeshStandardMaterial({
   color: 0xffc51b, emissive: 0x8d4d00, emissiveIntensity: 0.42,
   metalness: 0.65, roughness: 0.23
 });
-for (let s = 35; s < N; s += 82) {
-  const off = (Math.floor(s / 82) % 2 ? -2.8 : 2.8);
+// No more than 10 coins are placed around the circuit.
+for (let i = 0; i < 10; i++) {
+  const s = Math.floor((i + 0.5) * N / 10);
+  const off = (i % 2 ? -2.8 : 2.8);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.16, 10, 20), coinGold);
   ring.position.set(0, 1.3, 0);
   const q = pose(s, off);
@@ -656,7 +658,8 @@ function animate() {
     const brakeForce = countdown <= 0 && braking ? 34 : 0;
     const rollingResistance = speed > 0 ? (accelerating ? 1.2 : 11.5) : 0;
     speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
-    speed = THREE.MathUtils.clamp(speed, 0, 42);
+    const maxSpeedKmh = 99 + coinCount * 20;
+    speed = THREE.MathUtils.clamp(speed, 0, maxSpeedKmh / 3);
     if (!accelerating && speed < 0.35) speed = 0;
 
     // Manual driving: steering changes the car's heading; the track never
