@@ -214,3 +214,10 @@ box-shadow:0 18px 70px #0008,inset 0 0 70px #00aaff13}
 .escape-art{background:linear-gradient(0deg,rgba(1,8,19,.96),rgba(1,8,19,.12) 65%),linear-gradient(135deg,#2a1024,#6e1832 45%,#102e4a),url('assets/overdrive-menu.png') center/cover}
 #back-to-modes{margin-left:8px}
 @media(max-width:800px){.mode-choice{padding:18px}.escape-art{min-height:230px}}
+
+/* Rival positions and rechargeable nitro HUD. */
+.rival-marker{fill:#ff4b67;stroke:#fff;stroke-width:1.2;filter:drop-shadow(0 0 3px #ff234c)}
+#nitro-percent{color:#bdf8ff;font-size:11px;margin-left:5px}
+.nitro-panel{transform:none}
+.nitro-touch{font-size:10px!important;background:#087bbbdc!important;border-color:#1bd8ff!important}
+@media(max-width:640px){.speed-panel{width:150px}.nitro-panel{height:43px}}
