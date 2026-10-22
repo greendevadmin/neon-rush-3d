@@ -11,7 +11,21 @@ const trackLayouts = {
 };
 const escapeMode = requestedMode === 'escape';
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
-const START_GRID_INDEX = 8; // Everyone lines up just beyond the start/finish stripe.
+const START_GRID_INDEX = 8; // Grid reference just beyond the start/finish stripe.
+const CUP_RACES = 4;
+const cupStorageKey = 'overdrive-cup-' + selectedTrack;
+function readCupProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(cupStorageKey) || '{}');
+    return { race: Math.max(1, Math.min(CUP_RACES, Number(saved.race) || 1)), grid: Math.max(1, Math.min(6, Number(saved.grid) || 1)) };
+  } catch (_) { return { race: 1, grid: 1 }; }
+}
+function saveCupProgress(progress) {
+  try { localStorage.setItem(cupStorageKey, JSON.stringify(progress)); } catch (_) {}
+}
+let cupProgress = requestedMode === 'escape' ? { race: 1, grid: 1 } : readCupProgress();
+const startingGridPosition = cupProgress.grid;
+const startingGridIndex = START_GRID_INDEX - (startingGridPosition - 1) * 7;
 const controlPoints = requestedMode === 'escape'
   ? Array.from({ length: 3000 }, (_, i) => {
       const z = i * 18;
@@ -599,13 +613,13 @@ mapPath.setAttribute('d', (escapeMode ? path.filter((p, i) => i % 100 === 0 || i
 
 const TOTAL_LAPS = 3;
 let countdown = 3.5;
-let playerProgress = 0;
-let s = 0;
+let playerProgress = startingGridIndex;
+let s = wrap(startingGridIndex);
 let currentLap = 1;
 let completedLaps = 0;
-let lastNearestIndex = 0;
-const playerPosition = pose(START_GRID_INDEX, -2.7).p;
-let playerHeading = Math.atan2(tangent(START_GRID_INDEX).x, tangent(START_GRID_INDEX).z);
+let lastNearestIndex = wrap(startingGridIndex);
+const playerPosition = pose(wrap(startingGridIndex), -2.7).p;
+let playerHeading = Math.atan2(tangent(wrap(startingGridIndex)).x, tangent(wrap(startingGridIndex)).z);
 let raceTime = 0;
 let raceFinished = false;
 let survivalTime = 0;
@@ -732,8 +746,14 @@ function finishRace(caught = false) {
     } catch (_) {}
   }
 
+  if (requestedMode !== 'escape') {
+    const nextRace = cupProgress.race + 1;
+    const nextProgress = nextRace > CUP_RACES ? { race: 1, grid: 1 } : { race: nextRace, grid: place };
+    saveCupProgress(nextProgress);
+    document.querySelector('.race-panel .race-stat:first-child .eyebrow').textContent = 'COPA ' + cupProgress.race + '/' + CUP_RACES + ' · VOLTA';
+  }
   document.querySelector('#finish-overlay .eyebrow').textContent =
-    requestedMode === 'escape' ? 'OVERDRIVE · FIM DA FUGA' : 'OVERDRIVE · LINHA DE CHEGADA';
+    requestedMode === 'escape' ? 'OVERDRIVE · FIM DA FUGA' : 'OVERDRIVE · ' + (cupProgress.race === CUP_RACES ? 'COPA CONCLUÍDA' : 'CORRIDA ' + cupProgress.race + '/' + CUP_RACES);
   document.querySelector('#finish-overlay h1').textContent =
     requestedMode === 'escape'
       ? (escapeCaught ? 'Você foi capturado!' : 'Fim da fuga')
@@ -741,7 +761,7 @@ function finishRace(caught = false) {
   document.getElementById('finish-position').textContent =
     requestedMode === 'escape'
       ? Math.floor(survivalTime) + 's SOBREVIVIDOS'
-      : place + 'º LUGAR';
+      : place + 'º LUGAR' + (cupProgress.race === CUP_RACES ? ' · FIM DA COPA' : ' · PRÓXIMA LARGADA: ' + place + 'º');
   document.getElementById('finish-stats').textContent =
     requestedMode === 'escape'
       ? 'Tempo: ' + formatRaceTime(survivalTime) + ' · ' +
@@ -749,19 +769,22 @@ function finishRace(caught = false) {
         formatRaceTime(bestSurvival)
       : 'Tempo: ' + formatRaceTime(raceTime) + ' · ' +
         score.toLocaleString('pt-BR') + ' pontos · ' + coinCount + ' moedas';
-  document.getElementById('restart-button').textContent =
-    requestedMode === 'escape' ? 'TENTAR NOVAMENTE' : 'CORRER NOVAMENTE';
+  document.getElementById('restart-button').textContent = requestedMode === 'escape'
+    ? 'TENTAR NOVAMENTE'
+    : (cupProgress.race === CUP_RACES ? 'NOVA COPA' : 'PRÓXIMA CORRIDA (' + (cupProgress.race + 1) + '/' + CUP_RACES + ')');
   document.getElementById('finish-overlay').classList.add('visible');
   document.getElementById('pause-overlay').classList.remove('visible');
 }
 function restartRace() {
-  playerProgress = START_GRID_INDEX;
-  s = START_GRID_INDEX;
+  cupProgress = requestedMode === 'escape' ? { race: 1, grid: 1 } : readCupProgress();
+  const gridIndex = START_GRID_INDEX - (cupProgress.grid - 1) * 7;
+  playerProgress = gridIndex;
+  s = wrap(gridIndex);
   currentLap = 1;
   completedLaps = 0;
-  lastNearestIndex = START_GRID_INDEX;
-  playerPosition.copy(pose(START_GRID_INDEX, -2.7).p);
-  playerHeading = Math.atan2(tangent(START_GRID_INDEX).x, tangent(START_GRID_INDEX).z);
+  lastNearestIndex = wrap(gridIndex);
+  playerPosition.copy(pose(wrap(gridIndex), -2.7).p);
+  playerHeading = Math.atan2(tangent(wrap(gridIndex)).x, tangent(wrap(gridIndex)).z);
   car.position.copy(playerPosition);
   car.rotation.y = playerHeading;
   raceTime = 0;
@@ -809,11 +832,12 @@ function restartRace() {
   document.getElementById('pause-overlay').classList.remove('visible');
   document.getElementById('pause-button').textContent = 'Ⅱ';
   document.getElementById('lap').textContent = requestedMode === 'escape' ? 'FUGA' : '1/' + TOTAL_LAPS;
+  if (requestedMode !== 'escape') document.querySelector('.race-panel .race-stat:first-child .eyebrow').textContent = 'COPA ' + cupProgress.race + '/' + CUP_RACES + ' · VOLTA';
   document.getElementById('race-time').textContent = '00:00.0';
   document.getElementById('points').textContent = '0';
   document.getElementById('coins').textContent = '0';
 
-  document.getElementById('position').textContent = '6/6';
+  document.getElementById('position').textContent = cupProgress.grid + '/6';
 }
 document.getElementById('restart-button').addEventListener('click', restartRace);
 
@@ -969,7 +993,7 @@ function animate() {
     const brakeForce = countdown <= 0 && braking ? 34 : 0;
     const rollingResistance = speed > 0 ? (accelerating ? 1.2 : 11.5) : 0;
     speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
-    const maxSpeedKmh = 99 + coinCount * 20 + (usingNitro ? 70 : 0);
+    const maxSpeedKmh = 99 + coinCount * 10 + (usingNitro ? 70 : 0);
     speed = THREE.MathUtils.clamp(speed, 0, maxSpeedKmh / 3);
     if (!accelerating && speed < 0.35) speed = 0;
 
