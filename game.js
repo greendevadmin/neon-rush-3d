@@ -389,6 +389,7 @@ function makeCar(color, police = false) {
 const car = makeCar(0x087cf0);
 scene.add(car);
 const rivals = [];
+const traffic = [];
 const police = [];
 let policeGap = 72;
 let escapeCaught = false;
@@ -416,6 +417,20 @@ if (requestedMode === 'escape') {
     const mesh = makeCar(i === 0 ? 0xf4f7ff : 0x182b46, true);
     scene.add(mesh);
     police.push({ mesh, offset: (i - 1) * 3.4, delay: i * 8 });
+  }
+
+  const trafficColors = [0xe7e7df, 0xd94444, 0x23a6a6, 0xb4a2d9];
+  for (let i = 0; i < trafficColors.length; i++) {
+    const mesh = makeCar(trafficColors[i]);
+    scene.add(mesh);
+    const startProgress = 70 + i * 105;
+    traffic.push({
+      mesh,
+      progress: startProgress,
+      startProgress,
+      off: i % 2 === 0 ? -3.1 : 3.1,
+      speed: 18 + (i % 3) * 2.5
+    });
   }
 }
 
@@ -607,6 +622,7 @@ function restartRace() {
     r.speed = 0;
     r.targetSpeed = 29 + i * 1.6;
   });
+  traffic.forEach(vehicle => { vehicle.progress = vehicle.startProgress; });
   coins.forEach(item => {
     item.s = item.startS;
     item.off = item.startOff;
@@ -842,7 +858,8 @@ function animate() {
     s = nearestIndex;
     playerProgress = completedLaps * N + nearestIndex;
     currentLap = Math.min(TOTAL_LAPS, completedLaps + 1);
-    document.getElementById('lap').textContent = currentLap + '/' + TOTAL_LAPS;
+    document.getElementById('lap').textContent =
+      requestedMode === 'escape' ? 'FUGA' : currentLap + '/' + TOTAL_LAPS;
 
     car.position.copy(playerPosition);
     car.position.y = 0;
@@ -881,6 +898,18 @@ function animate() {
       }
     }
 
+    if (requestedMode === 'escape') {
+      for (const vehicle of traffic) {
+        if (raceCanMove) {
+          vehicle.progress += (vehicle.speed + Math.min(survivalTime * 0.025, 5)) * dt / spacing;
+        }
+        const trafficPose = pose(vehicle.progress, vehicle.off);
+        vehicle.mesh.position.copy(trafficPose.p);
+        vehicle.mesh.position.y = 0;
+        vehicle.mesh.rotation.y = Math.atan2(trafficPose.t.x, trafficPose.t.z);
+      }
+    }
+
     if (requestedMode === 'escape' && raceCanMove) {
       const playerSpeedKmh = speed * 3;
       const closingRate = 1.1 + survivalTime * 0.035 - Math.min(playerSpeedKmh, 180) * 0.018;
@@ -896,7 +925,8 @@ function animate() {
 
     // Car-to-car collision. The player is pushed out of the rival's body,
     // loses speed on impact, and gets a small directional deflection.
-    for (const rival of rivals) {
+    const collisionTargets = requestedMode === 'escape' ? traffic : rivals;
+    for (const rival of collisionTargets) {
       const dx = playerPosition.x - rival.mesh.position.x;
       const dz = playerPosition.z - rival.mesh.position.z;
       const distance = Math.hypot(dx, dz);
