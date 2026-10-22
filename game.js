@@ -9,6 +9,7 @@ const trackLayouts = {
  canyon: [[0,0,160],[48,0,158],[86,0,132],[105,0,92],[102,0,55],[82,0,30],[48,0,24],[22,0,4],[18,0,-28],[42,0,-48],[78,0,-52],[92,0,-82],[70,0,-112],[42,0,-126],[8,0,-116],[-8,0,-88],[-38,0,-72],[-72,0,-84],[-106,0,-112],[-142,0,-96],[-156,0,-60],[-136,0,-25],[-100,0,-10],[-72,0,18],[-88,0,54],[-72,0,88],[-38,0,118],[-8,0,144]],
  neon: [[0,0,165],[70,0,165],[112,0,138],[112,0,98],[78,0,76],[42,0,84],[22,0,58],[48,0,30],[98,0,18],[135,0,-8],[122,0,-45],[86,0,-56],[48,0,-42],[20,0,-62],[32,0,-100],[62,0,-132],[34,0,-160],[-8,0,-150],[-26,0,-116],[-58,0,-94],[-100,0,-112],[-142,0,-88],[-146,0,-48],[-112,0,-22],[-80,0,8],[-98,0,44],[-128,0,76],[-96,0,116],[-48,0,148]]
 };
+const escapeMode = requestedMode === 'escape';
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
 const controlPoints = requestedMode === 'escape'
   ? Array.from({ length: 1200 }, (_, i) => {
@@ -60,7 +61,6 @@ scene.add(ground);
 
 // Classic uses a closed circuit. Escape uses a long OPEN road with no
 // end-to-start connection; its road edges are generated without a closing seam.
-const escapeMode = requestedMode === 'escape';
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, !escapeMode, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
 const path = centerCurve.getSpacedPoints(escapeMode ? 6000 : 1000)
