@@ -583,6 +583,54 @@ let menuOpen = true;
 let steeringSensitivity = 1;
 let invertSteering = false;
 const keys = {};
+const gamepadInput = { steer: 0, accelerate: false, brake: false, nitro: false, pause: false };
+const controllerStatus = document.getElementById('controller-status');
+let activeGamepadIndex = null;
+function setControllerStatus(message, connected = false) {
+  if (!controllerStatus) return;
+  controllerStatus.textContent = message;
+  controllerStatus.classList.toggle('connected', connected);
+}
+function pollGamepad() {
+  if (!navigator.getGamepads) {
+    setControllerStatus('Controle USB: navegador sem suporte à Gamepad API');
+    return;
+  }
+  const pads = Array.from(navigator.getGamepads()).filter(Boolean);
+  const pad = pads.find(p => p.connected);
+  if (!pad) {
+    activeGamepadIndex = null;
+    gamepadInput.steer = 0;
+    gamepadInput.accelerate = gamepadInput.brake = gamepadInput.nitro = gamepadInput.pause = false;
+    setControllerStatus('Controle não detectado · conecte e pressione um botão');
+    return;
+  }
+  activeGamepadIndex = pad.index;
+  const buttons = pad.buttons || [];
+  const pressed = index => !!buttons[index] && (buttons[index].pressed || buttons[index].value > 0.55);
+  const axes = pad.axes || [];
+  const axisX = Number.isFinite(axes[0]) ? axes[0] : 0;
+  const deadzone = 0.18;
+  gamepadInput.steer = Math.abs(axisX) > deadzone ? axisX : 0;
+  // Standard mapping: X/Cross or R2 accelerates; Circle/Square or L2 brakes.
+  gamepadInput.accelerate = pressed(0) || pressed(7);
+  gamepadInput.brake = pressed(1) || pressed(2) || pressed(6);
+  // R1/Y/Triangle activates nitro; Start pauses.
+  gamepadInput.nitro = pressed(5) || pressed(3);
+  gamepadInput.pause = pressed(9);
+  const label = pad.id || 'Controle USB';
+  setControllerStatus('Controle conectado · ' + label, true);
+}
+addEventListener('gamepadconnected', event => {
+  activeGamepadIndex = event.gamepad.index;
+  setControllerStatus('Controle conectado · ' + (event.gamepad.id || 'Gamepad'), true);
+});
+addEventListener('gamepaddisconnected', () => {
+  activeGamepadIndex = null;
+  gamepadInput.steer = 0;
+  gamepadInput.accelerate = gamepadInput.brake = gamepadInput.nitro = gamepadInput.pause = false;
+  setControllerStatus('Controle desconectado');
+});
 addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
   keys[key] = true;
@@ -863,11 +911,13 @@ function animate() {
     const raceCanMove = countdown <= 0;
     if (raceCanMove) { raceTime += dt; if (requestedMode === 'escape') survivalTime += dt; }
     document.getElementById('race-time').textContent = formatRaceTime(requestedMode === 'escape' ? survivalTime : raceTime);
-    const accelerating = keys.w || keys.arrowup;
-    const braking = keys.s || keys.arrowdown;
-    const usingNitro = requestedMode !== 'escape' && countdown <= 0 && nitro > 0 && (keys.shift || keys[' ']);
+    pollGamepad();
+    const accelerating = keys.w || keys.arrowup || gamepadInput.accelerate;
+    const braking = keys.s || keys.arrowdown || gamepadInput.brake;
+    const usingNitro = requestedMode !== 'escape' && countdown <= 0 && nitro > 0 && (keys.shift || keys[' '] || gamepadInput.nitro);
     if (usingNitro) nitro = Math.max(0, nitro - 34 * dt);
-    const baseSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
+    const keyboardSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
+    const baseSteering = THREE.MathUtils.clamp(keyboardSteering - gamepadInput.steer, -1, 1);
     const steering = baseSteering * (invertSteering ? -1 : 1);
     
     const engineAcceleration = countdown <= 0 && accelerating ? (usingNitro ? 34 : 20) : 0;
