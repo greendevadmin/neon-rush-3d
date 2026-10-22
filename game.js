@@ -901,6 +901,7 @@ function updatePickups(items, dt) {
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.04);
+  pollGamepad();
   if (!menuOpen && !paused && !raceFinished) {
     if (countdown > 0) {
       countdown = Math.max(0, countdown - dt);
@@ -914,7 +915,6 @@ function animate() {
     const raceCanMove = countdown <= 0;
     if (raceCanMove) { raceTime += dt; if (requestedMode === 'escape') survivalTime += dt; }
     document.getElementById('race-time').textContent = formatRaceTime(requestedMode === 'escape' ? survivalTime : raceTime);
-    pollGamepad();
     const accelerating = keys.w || keys.arrowup || gamepadInput.accelerate;
     const braking = keys.s || keys.arrowdown || gamepadInput.brake;
     const usingNitro = requestedMode !== 'escape' && countdown <= 0 && nitro > 0 && (keys.shift || keys[' '] || gamepadInput.nitro);
