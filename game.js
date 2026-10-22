@@ -586,6 +586,7 @@ const keys = {};
 const gamepadInput = { steer: 0, accelerate: false, brake: false, nitro: false, pause: false };
 const controllerStatus = document.getElementById('controller-status');
 let activeGamepadIndex = null;
+let gamepadPauseWasPressed = false;
 function setControllerStatus(message, connected = false) {
   if (!controllerStatus) return;
   controllerStatus.textContent = message;
@@ -618,6 +619,8 @@ function pollGamepad() {
   // R1/Y/Triangle activates nitro; Start pauses.
   gamepadInput.nitro = pressed(5) || pressed(3);
   gamepadInput.pause = pressed(9);
+  if (gamepadInput.pause && !gamepadPauseWasPressed && !menuOpen) togglePause();
+  gamepadPauseWasPressed = gamepadInput.pause;
   const label = pad.id || 'Controle USB';
   setControllerStatus('Controle conectado · ' + label, true);
 }
