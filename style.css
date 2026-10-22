@@ -202,3 +202,15 @@ box-shadow:0 18px 70px #0008,inset 0 0 70px #00aaff13}
 
 /* Track selection cards */
 .track-list{display:grid;gap:10px}.track-card{padding:15px 18px}.track-card>strong{font-size:clamp(18px,1.8vw,25px);margin:8px 0}.track-card .classic-description{font-size:11px}.track-card .classic-play{margin-top:12px;padding-top:10px}.track-hint{font-size:10px;line-height:1.5;color:#8eb0c3;margin:4px 0 0}@media(min-width:801px){.mode-page-copy{max-width:560px}.mode-page-copy>p{margin:12px 0 18px}.mode-page-layout{grid-template-columns:minmax(360px,.9fr) minmax(380px,1.1fr)}.mode-art{min-height:clamp(460px,70vh,700px)}}
+
+/* Separate mode hub from the Classic circuit selector. */
+.mode-hub .mode-page-copy>p{max-width:450px}
+.mode-choice-list{gap:14px}
+.mode-choice{padding:22px 24px}
+.escape-choice{border-color:#ff496f;background:linear-gradient(115deg,rgba(67,17,39,.96),rgba(15,13,31,.97));box-shadow:0 0 25px #ff23451a}
+.escape-choice .classic-label,.escape-choice .classic-play{color:#ff6684}
+.escape-choice .classic-play{border-top-color:#653047}
+.escape-choice:hover{border-color:#ff9bae;box-shadow:0 0 30px #ff234535}
+.escape-art{background:linear-gradient(0deg,rgba(1,8,19,.96),rgba(1,8,19,.12) 65%),linear-gradient(135deg,#2a1024,#6e1832 45%,#102e4a),url('assets/overdrive-menu.png') center/cover}
+#back-to-modes{margin-left:8px}
+@media(max-width:800px){.mode-choice{padding:18px}.escape-art{min-height:230px}}
