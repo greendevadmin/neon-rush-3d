@@ -10,7 +10,13 @@ const trackLayouts = {
  neon: [[0,0,165],[70,0,165],[112,0,138],[112,0,98],[78,0,76],[42,0,84],[22,0,58],[48,0,30],[98,0,18],[135,0,-8],[122,0,-45],[86,0,-56],[48,0,-42],[20,0,-62],[32,0,-100],[62,0,-132],[34,0,-160],[-8,0,-150],[-26,0,-116],[-58,0,-94],[-100,0,-112],[-142,0,-88],[-146,0,-48],[-112,0,-22],[-80,0,8],[-98,0,44],[-128,0,76],[-96,0,116],[-48,0,148]]
 };
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
-const controlPoints = trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
+const controlPoints = requestedMode === 'escape'
+  ? Array.from({ length: 1200 }, (_, i) => {
+      const z = i * 18;
+      const x = Math.sin(i * 0.095) * 24 + Math.sin(i * 0.031) * 43 + Math.sin(i * 0.017) * 24;
+      return new THREE.Vector3(x, 0, z);
+    })
+  : trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(selectedTrack === 'neon' ? 0x172a55 : selectedTrack === 'canyon' ? 0xd99a6a : 0xf2b487);
 scene.fog = new THREE.Fog(selectedTrack === 'neon' ? 0x263c68 : selectedTrack === 'canyon' ? 0xc98d62 : 0xe8b28b, 180, 620);
@@ -51,19 +57,29 @@ ground.position.y = -0.85;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// The centerline is a single CLOSED spline. This prevents the end-to-start
-// connector from cutting across the track and producing overlapping road strips.
-const centerCurve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal', 0.5);
+// Classic uses a closed circuit. Escape uses a long OPEN road with no
+// end-to-start connection; its road edges are generated without a closing seam.
+const escapeMode = requestedMode === 'escape';
+const centerCurve = new THREE.CatmullRomCurve3(controlPoints, !escapeMode, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
-const path = centerCurve.getSpacedPoints(1000).slice(0, -1)
+const path = centerCurve.getSpacedPoints(escapeMode ? 18000 : 1000)
+  .slice(0, escapeMode ? undefined : -1)
   .map(p => new THREE.Vector3(p.x, 0, p.z));
 const N = path.length;
 const spacing = trackLength / N;
 const ROAD_WIDTH = 14;
 const KERB_WIDTH = 1.05;
 
-function wrap(s) { return (s % N + N) % N; }
+function wrap(s) {
+  return escapeMode ? THREE.MathUtils.clamp(s, 0, N - 1.001) : (s % N + N) % N;
+}
 function tangent(i) {
+  if (escapeMode) {
+    const index = THREE.MathUtils.clamp(Math.round(i), 0, N - 1);
+    const before = path[Math.max(0, index - 1)];
+    const after = path[Math.min(N - 1, index + 1)];
+    return after.clone().sub(before).normalize();
+  }
   const before = path[(i - 1 + N) % N];
   const after = path[(i + 1) % N];
   return after.clone().sub(before).normalize();
@@ -82,8 +98,8 @@ function ribbon(innerOffset, outerOffset, y, material) {
     a.y = y; b.y = y;
     vertices.push(a.x, a.y, a.z, b.x, b.y, b.z);
   }
-  for (let i = 0; i < N; i++) {
-    const a = i * 2, b = ((i + 1) % N) * 2;
+  for (let i = 0; i < (escapeMode ? N - 1 : N); i++) {
+    const a = i * 2, b = (escapeMode ? i + 1 : (i + 1) % N) * 2;
     indices.push(a, b, a + 1, b, b + 1, a + 1);
   }
   const geometry = new THREE.BufferGeometry();
@@ -100,8 +116,8 @@ function coloredKerbs() {
   const vertices = [], colors = [], indices = [];
   const redColor = new THREE.Color(0xe33a3e);
   const whiteColor = new THREE.Color(0xf6f1e8);
-  for (let i = 0; i < N; i++) {
-    const j = (i + 1) % N;
+  for (let i = 0; i < (escapeMode ? N - 1 : N); i++) {
+    const j = escapeMode ? i + 1 : (i + 1) % N;
     const isRed = Math.floor(i / 5) % 2 === 0;
     const color = isRed ? redColor : whiteColor;
     const addPoint = (p, offset) => {
@@ -178,7 +194,7 @@ coloredKerbs();
 
 // Center dashes are rotated to follow each section of the road.
 const dashMat = new THREE.MeshStandardMaterial({ color: 0xf6f0e5, roughness: 0.8 });
-for (let i = 0; i < N; i += 21) {
+for (let i = 0; i < (escapeMode ? N - 1 : N); i += 21) {
   const p = path[i], t = tangent(i);
   const dash = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 3.5), dashMat);
   dash.position.set(p.x, 0.065, p.z);
@@ -189,8 +205,8 @@ for (let i = 0; i < N; i += 21) {
 // Guardrail posts and short rail sections follow the same closed centerline.
 const postGeo = new THREE.BoxGeometry(0.16, 1.0, 0.16);
 const railGeo = new THREE.BoxGeometry(1, 0.24, 0.2);
-for (let i = 0; i < N; i += 8) {
-  const j = (i + 8) % N;
+for (let i = 0; i < (escapeMode ? N - 8 : N); i += 8) {
+  const j = escapeMode ? Math.min(i + 8, N - 1) : (i + 8) % N;
   for (const sign of [-1, 1]) {
     const p = path[i], q = path[j];
     const a = p.clone().addScaledVector(side(i), sign * (ROAD_WIDTH / 2 + KERB_WIDTH + 1.2));
@@ -436,10 +452,11 @@ if (requestedMode === 'escape') {
 
 function pose(s, offset = 0) {
   const u = wrap(s);
-  const i = Math.floor(u);
+  const i = Math.min(Math.floor(u), N - 2);
   const f = u - i;
-  const p = path[i].clone().lerp(path[(i + 1) % N], f);
-  const t = tangent(i).lerp(tangent((i + 1) % N), f).normalize();
+  const nextIndex = escapeMode ? i + 1 : (i + 1) % N;
+  const p = path[i].clone().lerp(path[nextIndex], f);
+  const t = tangent(i).lerp(tangent(nextIndex), f).normalize();
   const lateral = new THREE.Vector3(t.z, 0, -t.x);
   p.addScaledVector(lateral, offset);
   return { p, t };
@@ -453,7 +470,7 @@ const coinGold = new THREE.MeshStandardMaterial({
 });
 // No more than 10 coins are placed around the circuit.
 for (let i = 0; i < 10; i++) {
-  const s = Math.floor((i + 0.5) * N / 10);
+  const s = requestedMode === 'escape' ? 80 + i * 42 : Math.floor((i + 0.5) * N / 10);
   const off = (i % 2 ? -2.8 : 2.8);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.16, 10, 20), coinGold);
   ring.position.set(0, 1.3, 0);
@@ -481,10 +498,10 @@ function mapXY(p) {
     y: 100 + (p.z - (minZ + maxZ) / 2) * scale
   };
 }
-mapPath.setAttribute('d', path.map((p, i) => {
+mapPath.setAttribute('d', (escapeMode ? path.filter((p, i) => i % 100 === 0 || i === path.length - 1) : path).map((p, i) => {
   const q = mapXY(p);
   return (i ? 'L' : 'M') + q.x.toFixed(1) + ' ' + q.y.toFixed(1);
-}).join(' ') + ' Z');
+}).join(' ') + (escapeMode ? '' : ' Z'));
 
 const TOTAL_LAPS = 3;
 let countdown = 3.5;
@@ -849,7 +866,7 @@ function animate() {
     // Count a lap only when the car genuinely crosses the start area forward.
     const startDistance = Math.hypot(playerPosition.x - path[0].x, playerPosition.z - path[0].z);
     const forwardAtStart = forward.dot(tangent(0));
-    if (raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
+    if (!escapeMode && raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
         startDistance < ROAD_WIDTH * 1.5 && forwardAtStart > 0.15) {
       completedLaps++;
       if (requestedMode !== 'escape' && completedLaps >= TOTAL_LAPS) finishRace();
@@ -915,7 +932,7 @@ function animate() {
       const closingRate = 1.1 + survivalTime * 0.035 - Math.min(playerSpeedKmh, 180) * 0.018;
       policeGap = THREE.MathUtils.clamp(policeGap - closingRate * dt, 3.1, 150);
       for (const cop of police) {
-        const copProgress = playerProgress - policeGap / spacing - cop.delay;
+        const copProgress = Math.max(0, playerProgress - policeGap / spacing - cop.delay);
         const q = pose(copProgress, cop.offset);
         cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;
         cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
