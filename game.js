@@ -470,18 +470,54 @@ const coinGold = new THREE.MeshStandardMaterial({
   color: 0xffc51b, emissive: 0x8d4d00, emissiveIntensity: 0.42,
   metalness: 0.65, roughness: 0.23
 });
-// No more than 10 coins are placed around the circuit.
+// Keep 10 coin objects active at most; they respawn after collection until
+// the player has collected 10 coins in total for this run.
 for (let i = 0; i < 10; i++) {
   const s = requestedMode === 'escape' ? 80 + i * 42 : Math.floor((i + 0.5) * N / 10);
   const off = (i % 2 ? -2.8 : 2.8);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.16, 10, 20), coinGold);
-  ring.position.set(0, 1.3, 0);
   const q = pose(s, off);
   ring.position.copy(q.p).add(new THREE.Vector3(0, 1.32, 0));
   ring.rotation.y = Math.atan2(q.t.x, q.t.z);
   ring.castShadow = true;
   scene.add(ring);
   coins.push({ mesh: ring, s, off, startS: s, startOff: off, collected: false, respawnAt: 0 });
+}
+
+// Police roadblocks for Escape mode. Each roadblock has two striped barricades
+// with a central gap, so the player must steer through instead of hitting them.
+const policeBarriers = [];
+if (escapeMode) {
+  const barrierRed = mat(0xe52e3f, 0.62);
+  const barrierWhite = mat(0xf4f5ee, 0.62);
+  const barrierDark = mat(0x202936, 0.8);
+  for (let i = 0; i < 24; i++) {
+    const barrierS = 190 + i * 245;
+    const group = new THREE.Group();
+    for (const offset of [-4.8, 4.8]) {
+      const block = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.55, 0.62), barrierRed);
+      base.position.y = 0.72;
+      block.add(base);
+      for (let stripe = -1; stripe <= 1; stripe++) {
+        const mark = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.58, 0.66), barrierWhite);
+        mark.position.set(stripe * 0.95, 0.73, 0);
+        mark.rotation.z = -0.25;
+        block.add(mark);
+      }
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.18, 0.9), barrierDark);
+      foot.position.y = 0.35;
+      block.add(foot);
+      block.position.x = offset;
+      group.add(block);
+    }
+    const q = pose(barrierS, 0);
+    group.position.copy(q.p);
+    group.rotation.y = Math.atan2(q.t.x, q.t.z);
+    group.userData.progress = barrierS;
+    scene.add(group);
+    policeBarriers.push(group);
+  }
 }
 // Recharging nitro crystals: each collected crystal respawns farther ahead.
 const nitroCrystals = [];
@@ -871,9 +907,11 @@ function circularDifference(a, b) {
 function updatePickups(items, dt) {
   for (const item of items) {
     if (item.collected) {
-      if (requestedMode === 'escape' && item.respawnAt && clock.elapsedTime >= item.respawnAt) {
+      if (item.respawnAt && clock.elapsedTime >= item.respawnAt && coinCount < 10) {
         const index = items.indexOf(item);
-        item.s = wrap(playerProgress + 80 + index * 13);
+        item.s = escapeMode
+          ? wrap(playerProgress + 80 + index * 13)
+          : wrap(playerProgress + Math.max(55, Math.floor(N / 10)) + index * Math.max(8, Math.floor(N / 17)));
         item.off = index % 2 ? -2.8 : 2.8;
         const next = pose(item.s, item.off);
         item.mesh.position.copy(next.p).add(new THREE.Vector3(0, 1.32, 0));
@@ -884,6 +922,10 @@ function updatePickups(items, dt) {
       }
       if (item.collected) continue;
     }
+    if (coinCount >= 10) {
+      item.mesh.visible = false;
+      continue;
+    }
     item.mesh.rotation.y += dt * 1.8;
     item.mesh.position.y = 1.32 + Math.sin(clock.elapsedTime * 2.5 + item.s) * 0.12;
     const dx = item.mesh.position.x - playerPosition.x;
@@ -892,8 +934,8 @@ function updatePickups(items, dt) {
       item.collected = true;
       item.mesh.visible = false;
       points += 100;
-      coinCount++;
-      item.respawnAt = requestedMode === 'escape' ? clock.elapsedTime + 1.5 : 0;
+      coinCount = Math.min(10, coinCount + 1);
+      item.respawnAt = coinCount < 10 ? clock.elapsedTime + 1.5 : 0;
     }
   }
 }
@@ -939,6 +981,21 @@ function animate() {
     }
     let forward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
     if (raceCanMove && speed > 0) playerPosition.addScaledVector(forward, speed * dt);
+
+    // Hitting a police roadblock costs speed; steer through its central opening.
+    if (escapeMode && raceCanMove) {
+      for (const barrier of policeBarriers) {
+        const delta = playerPosition.clone().sub(barrier.position);
+        const distance = Math.hypot(delta.x, delta.z);
+        if (distance < 4.4) {
+          const local = delta.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -barrier.rotation.y);
+          if (Math.abs(local.x) > 2.4 && Math.abs(local.x) < 7.2 && Math.abs(local.z) < 3.8) {
+            speed *= 0.28;
+            playerPosition.add(new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading)).multiplyScalar(-1.8));
+          }
+        }
+      }
+    }
 
     // Find the nearest centerline sample only for lap detection and off-road grip.
     let nearestIndex = 0;
