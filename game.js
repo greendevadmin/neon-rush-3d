@@ -51,9 +51,10 @@ const white = mat(0xf5f0e6);
 const railMat = mat(0x9caeb5, 0.48, 0.48);
 const darkGlass = mat(0x071c2c, 0.19, 0.15);
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1800), grass);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(escapeMode ? 100000 : 1800, escapeMode ? 100000 : 1800), grass);
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.85;
+if (escapeMode) ground.position.z = 10800;
 ground.receiveShadow = true;
 scene.add(ground);
 
@@ -62,7 +63,7 @@ scene.add(ground);
 const escapeMode = requestedMode === 'escape';
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, !escapeMode, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
-const path = centerCurve.getSpacedPoints(escapeMode ? 18000 : 1000)
+const path = centerCurve.getSpacedPoints(escapeMode ? 6000 : 1000)
   .slice(0, escapeMode ? undefined : -1)
   .map(p => new THREE.Vector3(p.x, 0, p.z));
 const N = path.length;
@@ -168,7 +169,7 @@ ribbon(-ROAD_WIDTH / 2, ROAD_WIDTH / 2, 0.025, asphalt);
 coloredKerbs();
 
 // Checkered start/finish line, aligned with the track at the first checkpoint.
-{
+if (!escapeMode) {
   const start = path[0];
   const t = tangent(0);
   const line = new THREE.Group();
