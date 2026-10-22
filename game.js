@@ -11,7 +11,7 @@ const trackLayouts = {
 };
 const escapeMode = requestedMode === 'escape';
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
-const START_GRID_INDEX = 8; // Grid reference just beyond the start/finish stripe.
+const START_GRID_INDEX = -8; // Grid starts 8 samples BEFORE the start/finish stripe; negative indices wrap to the end of the closed circuit.
 const CUP_RACES = 4;
 const cupStorageKey = 'overdrive-cup-' + selectedTrack;
 function readCupProgress() {
