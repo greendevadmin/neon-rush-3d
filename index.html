@@ -101,16 +101,40 @@
   </div>
   <div id="mode-screen" class="menu-screen hidden">
     <div class="menu-backdrop"></div>
+    <div class="mode-page mode-hub">
+      <div class="mode-page-top">
+        <button id="back-to-menu" class="back-button" type="button">← VOLTAR</button>
+        <div class="menu-kicker">OVERDRIVE <span>•</span> MODOS DE JOGO</div>
+      </div>
+      <div class="mode-page-layout">
+        <div class="mode-page-copy">
+          <div class="menu-kicker">ESCOLHA COMO VAI CORRER</div>
+          <h2>DOIS MODOS.<br><span>UMA PAIXÃO.</span></h2>
+          <p>Dispute uma corrida de circuito ou tente escapar da polícia pelo maior tempo possível.</p>
+          <div class="track-list mode-choice-list">
+            <button id="classic-mode-button" class="classic-mode-card mode-choice" type="button"><span class="classic-label">MODO 01 • COMPETIÇÃO</span><strong>CORRIDA CLÁSSICA</strong><span class="classic-description">Escolha entre Costa Dourada, Canyon Rush e Circuito Urbano. Largue em 6º e lute pelo primeiro lugar.</span><span class="classic-play">ESCOLHER CIRCUITO <b>→</b></span></button>
+            <button id="escape-mode-button" class="classic-mode-card mode-choice escape-choice" type="button"><span class="classic-label">MODO 02 • FUGA INFINITA</span><strong>FUGA POLICIAL</strong><span class="classic-description">Fuja das viaturas, colete moedas e tente sobreviver por mais tempo. A perseguição fica cada vez mais intensa.</span><span class="classic-play">INICIAR FUGA <b>→</b></span></button>
+          </div>
+        </div>
+        <div class="mode-art escape-art" role="img" aria-label="Arte do modo de perseguição policial">
+          <div class="art-topline">02 <span>—</span> ENDLESS PURSUIT</div>
+          <div class="art-caption"><small>OVERDRIVE • FUGA INFINITA</small><strong>DON'T<br>GET CAUGHT.</strong><span>QUANTO MAIS TEMPO, MAIS DIFÍCIL</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="classic-screen" class="menu-screen hidden">
+    <div class="menu-backdrop"></div>
     <div class="mode-page">
       <div class="mode-page-top">
         <button id="back-to-menu" class="back-button" type="button">← VOLTAR</button>
-        <div class="menu-kicker">OVERDRIVE <span>•</span> SELEÇÃO DE MODO</div>
+        <div class="menu-kicker">OVERDRIVE <span>•</span> MODO CLÁSSICO</div>
       </div>
       <div class="mode-page-layout">
         <div class="mode-page-copy">
           <div class="menu-kicker">ESCOLHA SUA EXPERIÊNCIA</div>
-          <h2>SELECIONE<br><span>SEU MODO</span></h2>
-          <p>Prepare-se para acelerar. Mais modos serão adicionados em breve.</p>
+          <h2>ESCOLHA<br><span>SUA PISTA</span></h2>
+          <p>Três circuitos, seis pilotos e uma disputa até a linha de chegada.</p>
           <div class="track-list">
             <button class="classic-mode-card track-card" data-track="coast" type="button"><span class="classic-label">PISTA 01 • CIRCUITO COSTEIRO</span><strong>COSTA DOURADA</strong><span class="classic-description">Curvas fluidas à beira-mar e velocidade para abrir a temporada.</span><span class="classic-play">SELECIONAR PISTA <b>→</b></span></button>
             <button class="classic-mode-card track-card" data-track="canyon" type="button"><span class="classic-label">PISTA 02 • CANYON RUSH</span><strong>CANYON RUSH</strong><span class="classic-description">Traçado sinuoso, curvas fechadas e um desafio técnico.</span><span class="classic-play">SELECIONAR PISTA <b>→</b></span></button>
