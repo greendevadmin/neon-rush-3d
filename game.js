@@ -12,7 +12,7 @@ const trackLayouts = {
 const escapeMode = requestedMode === 'escape';
 const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
 const controlPoints = requestedMode === 'escape'
-  ? Array.from({ length: 1200 }, (_, i) => {
+  ? Array.from({ length: 3000 }, (_, i) => {
       const z = i * 18;
       const x = Math.sin(i * 0.095) * 24 + Math.sin(i * 0.031) * 43 + Math.sin(i * 0.017) * 24;
       return new THREE.Vector3(x, 0, z);
@@ -55,7 +55,7 @@ const darkGlass = mat(0x071c2c, 0.19, 0.15);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(escapeMode ? 100000 : 1800, escapeMode ? 100000 : 1800), grass);
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.85;
-if (escapeMode) ground.position.z = 10800;
+if (escapeMode) ground.position.z = 27000;
 ground.receiveShadow = true;
 scene.add(ground);
 
@@ -63,7 +63,7 @@ scene.add(ground);
 // end-to-start connection; its road edges are generated without a closing seam.
 const centerCurve = new THREE.CatmullRomCurve3(controlPoints, !escapeMode, 'centripetal', 0.5);
 const trackLength = centerCurve.getLength();
-const path = centerCurve.getSpacedPoints(escapeMode ? 6000 : 1000)
+const path = centerCurve.getSpacedPoints(escapeMode ? 9000 : 1000)
   .slice(0, escapeMode ? undefined : -1)
   .map(p => new THREE.Vector3(p.x, 0, p.z));
 const N = path.length;
