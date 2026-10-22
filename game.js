@@ -582,7 +582,8 @@ document.getElementById('restart-button').addEventListener('click', restartRace)
 const mainMenu = document.getElementById('main-menu');
 const settingsScreen = document.getElementById('settings-screen');
 const modeScreen = document.getElementById('mode-screen');
-if (new URLSearchParams(location.search).has('track')) { mainMenu.classList.add('hidden'); modeScreen.classList.remove('hidden'); }
+const classicScreen = document.getElementById('classic-screen');
+if (queryParams.has('track') || queryParams.has('mode')) { mainMenu.classList.add('hidden'); modeScreen.classList.remove('hidden'); }
 document.getElementById('play-button').addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   settingsScreen.classList.add('hidden');
@@ -592,12 +593,28 @@ document.getElementById('back-to-menu').addEventListener('click', () => {
   modeScreen.classList.add('hidden');
   mainMenu.classList.remove('hidden');
 });
+document.getElementById('classic-mode-button').addEventListener('click', () => {
+  modeScreen.classList.add('hidden'); classicScreen.classList.remove('hidden');
+});
+document.getElementById('back-to-modes').addEventListener('click', () => {
+  classicScreen.classList.add('hidden'); modeScreen.classList.remove('hidden');
+});
+document.getElementById('escape-mode-button').addEventListener('click', () => {
+  if (requestedMode !== 'escape') { location.search = '?mode=escape'; return; }
+  menuOpen = false; modeScreen.classList.add('hidden'); settingsScreen.classList.add('hidden');
+  countdown = 3.5; document.getElementById('start-countdown').classList.add('visible');
+  document.getElementById('lap').textContent = 'FUGA';
+  document.querySelector('.race-panel .eyebrow').textContent = 'SOBREVIVÊNCIA';
+  document.getElementById('position').textContent = '72 m';
+  document.querySelector('.position-panel .eyebrow').textContent = 'DISTÂNCIA DA POLÍCIA';
+  document.getElementById('hint').textContent = 'FUJA DA POLÍCIA • COLETE MOEDAS • SOBREVIVA';
+});
 document.querySelectorAll('[data-track]').forEach(button => {
   button.addEventListener('click', () => {
     const chosen = button.dataset.track;
-    if (chosen !== selectedTrack) { location.search = '?track=' + chosen; return; }
+    if (chosen !== selectedTrack || requestedMode !== 'classic') { location.search = '?track=' + chosen; return; }
     menuOpen = false;
-    modeScreen.classList.add('hidden');
+    classicScreen.classList.add('hidden');
     settingsScreen.classList.add('hidden');
     countdown = 3.5;
     document.getElementById('start-countdown').classList.add('visible');
@@ -641,7 +658,8 @@ function updatePickups(items, dt) {
       item.collected = true;
       item.mesh.visible = false;
       points += 100;
-      coinCount++;\n      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
+      coinCount++;
+      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;\n      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
     }
   }
 }
@@ -660,8 +678,8 @@ function animate() {
       document.getElementById('start-countdown').classList.remove('visible');
     }
     const raceCanMove = countdown <= 0;
-    if (raceCanMove) raceTime += dt;
-    document.getElementById('race-time').textContent = formatRaceTime(raceTime);
+    if (raceCanMove) { raceTime += dt; if (requestedMode === 'escape') survivalTime += dt; }
+    document.getElementById('race-time').textContent = formatRaceTime(requestedMode === 'escape' ? survivalTime : raceTime);
     const accelerating = keys.w || keys.arrowup;
     const braking = keys.s || keys.arrowdown;
     const baseSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
@@ -733,10 +751,10 @@ function animate() {
     // Count a lap only when the car genuinely crosses the start area forward.
     const startDistance = Math.hypot(playerPosition.x - path[0].x, playerPosition.z - path[0].z);
     const forwardAtStart = forward.dot(tangent(0));
-    if (requestedMode !== 'escape' && raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
+    if (raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
         startDistance < ROAD_WIDTH * 1.5 && forwardAtStart > 0.15) {
       completedLaps++;
-      if (completedLaps >= TOTAL_LAPS) finishRace();
+      if (requestedMode !== 'escape' && completedLaps >= TOTAL_LAPS) finishRace();
     }
     lastNearestIndex = nearestIndex;
     s = nearestIndex;
@@ -754,7 +772,7 @@ function animate() {
       rival.mesh.position.copy(q.p);
       rival.mesh.position.y = 0;
       rival.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
-      if (countdown <= 0) {
+      if (countdown <= 0 && requestedMode !== 'escape') {
         // Rivals accelerate smoothly and become faster as they collect coins.
         const maxRivalSpeed = (99 + rival.coins * 20) / 3;
         rival.speed = Math.min(maxRivalSpeed, rival.speed + 13 * dt);
@@ -767,7 +785,16 @@ function animate() {
       }
       // AI drivers collect the same coins as the player; a coin can only be claimed once.
       for (const item of coins) {
-        if (item.collected) continue;
+        if (item.collected) {
+        if (requestedMode === 'escape' && item.respawnAt && clock.elapsedTime >= item.respawnAt) {
+          item.s = wrap(playerProgress + 80 + coins.indexOf(item) * 13);
+          item.off = coins.indexOf(item) % 2 ? -2.8 : 2.8;
+          const next = pose(item.s, item.off);
+          item.mesh.position.copy(next.p).add(new THREE.Vector3(0, 1.32, 0));
+          item.mesh.visible = true; item.collected = false; item.respawnAt = 0;
+        }
+        continue;
+      }
         const coinDistance = Math.hypot(
           item.mesh.position.x - rival.mesh.position.x,
           item.mesh.position.z - rival.mesh.position.z
@@ -822,7 +849,7 @@ function animate() {
     document.getElementById('coins').textContent = coinCount;
 
     const ahead = rivals.filter(r => r.progress > playerProgress).length;
-    document.getElementById('position').textContent = (ahead + 1) + '/6';
+    document.getElementById('position').textContent = requestedMode === 'escape' ? Math.max(0, Math.round(policeGap)).toString() + ' m' : (ahead + 1) + '/6';
 
     const marker = mapXY(player.p);
     playerMarker.setAttribute('points', (marker.x) + ',' + (marker.y - 6) + ' ' +
