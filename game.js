@@ -1,13 +1,13 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const requestedTrack = new URLSearchParams(location.search).get('track') || 'coast';
+const queryParams = new URLSearchParams(location.search);\nconst requestedMode = queryParams.get('mode') === 'escape' ? 'escape' : 'classic';\nconst requestedTrack = queryParams.get('track') || 'coast';
 const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
 const trackLayouts = {
  coast: [[0,0,145],[42,0,145],[88,0,130],[126,0,100],[145,0,62],[139,0,28],[112,0,5],[83,0,-5],[71,0,-32],[91,0,-58],[104,0,-91],[88,0,-126],[55,0,-146],[15,0,-150],[-19,0,-134],[-38,0,-105],[-67,0,-91],[-99,0,-103],[-128,0,-86],[-145,0,-54],[-140,0,-20],[-117,0,5],[-101,0,31],[-113,0,59],[-106,0,91],[-81,0,119],[-48,0,137]],
  canyon: [[0,0,160],[48,0,158],[86,0,132],[105,0,92],[102,0,55],[82,0,30],[48,0,24],[22,0,4],[18,0,-28],[42,0,-48],[78,0,-52],[92,0,-82],[70,0,-112],[42,0,-126],[8,0,-116],[-8,0,-88],[-38,0,-72],[-72,0,-84],[-106,0,-112],[-142,0,-96],[-156,0,-60],[-136,0,-25],[-100,0,-10],[-72,0,18],[-88,0,54],[-72,0,88],[-38,0,118],[-8,0,144]],
  neon: [[0,0,165],[70,0,165],[112,0,138],[112,0,98],[78,0,76],[42,0,84],[22,0,58],[48,0,30],[98,0,18],[135,0,-8],[122,0,-45],[86,0,-56],[48,0,-42],[20,0,-62],[32,0,-100],[62,0,-132],[34,0,-160],[-8,0,-150],[-26,0,-116],[-58,0,-94],[-100,0,-112],[-142,0,-88],[-146,0,-48],[-112,0,-22],[-80,0,8],[-98,0,44],[-128,0,76],[-96,0,116],[-48,0,148]]
 };
-const selectedTrack = trackNames[requestedTrack] ? requestedTrack : 'coast';
+const selectedTrack = requestedMode === 'escape' ? 'neon' : (trackNames[requestedTrack] ? requestedTrack : 'coast');
 const controlPoints = trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(selectedTrack === 'neon' ? 0x172a55 : selectedTrack === 'canyon' ? 0xd99a6a : 0xf2b487);
@@ -386,7 +386,7 @@ function makeCar(color, police = false) {
 
 const car = makeCar(0x087cf0);
 scene.add(car);
-const rivals = [];
+const rivals = [];\nconst police = [];\nlet policeGap = 72;\nlet escapeCaught = false;
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 for (let i = 0; i < 5; i++) {
   // Rivals start ahead of the player; their positions and pace are updated by the AI.
@@ -402,6 +402,14 @@ for (let i = 0; i < 5; i++) {
     speed: 0,
     targetSpeed: 29 + i * 1.6
   });
+}
+
+if (requestedMode === 'escape') {
+  for (let i = 0; i < 3; i++) {
+    const mesh = makeCar(i === 0 ? 0xf4f7ff : 0x182b46, true);
+    scene.add(mesh);
+    police.push({ mesh, offset: (i - 1) * 3.4, delay: i * 8 });
+  }
 }
 
 function pose(s, offset = 0) {
@@ -466,7 +474,7 @@ let lastNearestIndex = 0;
 const playerPosition = path[0].clone();
 let playerHeading = Math.atan2(tangent(0).x, tangent(0).z);
 let raceTime = 0;
-let raceFinished = false;
+let raceFinished = false;\nlet survivalTime = 0;
 let lateral = 0;
 let speed = 0;
 
@@ -558,11 +566,11 @@ function restartRace() {
     r.speed = 0;
     r.targetSpeed = 29 + i * 1.6;
   });
-  coins.forEach(item => { item.collected = false; item.mesh.visible = true; });
+  coins.forEach(item => { item.collected = false; item.respawnAt = 0; item.mesh.visible = true; });
   document.getElementById('finish-overlay').classList.remove('visible');
   document.getElementById('pause-overlay').classList.remove('visible');
   document.getElementById('pause-button').textContent = 'Ⅱ';
-  document.getElementById('lap').textContent = '1/' + TOTAL_LAPS;
+  document.getElementById('lap').textContent = requestedMode === 'escape' ? 'FUGA' : '1/' + TOTAL_LAPS;
   document.getElementById('race-time').textContent = '00:00.0';
   document.getElementById('points').textContent = '0';
   document.getElementById('coins').textContent = '0';
@@ -633,7 +641,7 @@ function updatePickups(items, dt) {
       item.collected = true;
       item.mesh.visible = false;
       points += 100;
-      coinCount++;
+      coinCount++;\n      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
     }
   }
 }
@@ -725,7 +733,7 @@ function animate() {
     // Count a lap only when the car genuinely crosses the start area forward.
     const startDistance = Math.hypot(playerPosition.x - path[0].x, playerPosition.z - path[0].z);
     const forwardAtStart = forward.dot(tangent(0));
-    if (raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
+    if (requestedMode !== 'escape' && raceCanMove && lastNearestIndex > N * 0.8 && nearestIndex < N * 0.2 &&
         startDistance < ROAD_WIDTH * 1.5 && forwardAtStart > 0.15) {
       completedLaps++;
       if (completedLaps >= TOTAL_LAPS) finishRace();
@@ -773,7 +781,7 @@ function animate() {
       }
     }
 
-    // Car-to-car collision. The player is pushed out of the rival's body,
+    if (requestedMode === 'escape' && raceCanMove) {\n      policeGap = Math.max(3.1, policeGap - dt * (0.24 + survivalTime * 0.012));\n      for (const cop of police) {\n        const copProgress = playerProgress - policeGap - cop.delay;\n        const q = pose(copProgress, cop.offset);\n        cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;\n        cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);\n      }\n      if (policeGap <= 4.2) { finishRace(true); }\n    }\n\n    // Car-to-car collision. The player is pushed out of the rival's body,
     // loses speed on impact, and gets a small directional deflection.
     for (const rival of rivals) {
       const dx = playerPosition.x - rival.mesh.position.x;
@@ -823,7 +831,7 @@ function animate() {
       (-Math.atan2(player.t.x, player.t.z) * 180 / Math.PI) + ' ' + marker.x + ' ' + marker.y + ')');
 
     const hint = document.getElementById('hint');
-    hint.textContent = 'PISTA LIVRE • PEGUE AS MOEDAS • MODO MANUAL';
+    hint.textContent = requestedMode === 'escape' ? 'FUJA DA POLÍCIA • PEGUE MOEDAS • NÃO SEJA CAPTURADO' : 'PISTA LIVRE • PEGUE AS MOEDAS • MODO MANUAL';
   } else {
     camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
   }
