@@ -393,7 +393,8 @@ const police = [];
 let policeGap = 72;
 let escapeCaught = false;
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
-for (let i = 0; i < 5; i++) {
+if (requestedMode !== 'escape') {
+  for (let i = 0; i < 5; i++) {
   // Rivals start ahead of the player; their positions and pace are updated by the AI.
   const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
@@ -407,6 +408,7 @@ for (let i = 0; i < 5; i++) {
     speed: 0,
     targetSpeed: 29 + i * 1.6
   });
+  }
 }
 
 if (requestedMode === 'escape') {
@@ -445,7 +447,7 @@ for (let i = 0; i < 10; i++) {
   ring.rotation.y = Math.atan2(q.t.x, q.t.z);
   ring.castShadow = true;
   scene.add(ring);
-  coins.push({ mesh: ring, s, off, collected: false });
+  coins.push({ mesh: ring, s, off, startS: s, startOff: off, collected: false, respawnAt: 0 });
 }
 // Nitro pickups removed; the racing surface stays clear.
 
@@ -533,15 +535,45 @@ function formatRaceTime(seconds) {
   const remaining = (seconds % 60).toFixed(1).padStart(4, '0');
   return minutes + ':' + remaining;
 }
-function finishRace() {
+function finishRace(caught = false) {
+  if (raceFinished) return;
   raceFinished = true;
+  if (caught) escapeCaught = true;
   speed = 0;
   paused = false;
+
   const place = 1 + rivals.filter(r => r.progress > playerProgress).length;
-  document.getElementById('finish-position').textContent = place + 'º LUGAR';
+  const score = points + (requestedMode === 'escape' ? Math.floor(survivalTime * 10) : 0);
+  let bestSurvival = survivalTime;
+  if (requestedMode === 'escape') {
+    try {
+      bestSurvival = Math.max(
+        Number(localStorage.getItem('overdrive-best-survival') || 0),
+        survivalTime
+      );
+      localStorage.setItem('overdrive-best-survival', String(bestSurvival));
+    } catch (_) {}
+  }
+
+  document.querySelector('#finish-overlay .eyebrow').textContent =
+    requestedMode === 'escape' ? 'OVERDRIVE · FIM DA FUGA' : 'OVERDRIVE · LINHA DE CHEGADA';
+  document.querySelector('#finish-overlay h1').textContent =
+    requestedMode === 'escape'
+      ? (escapeCaught ? 'Você foi capturado!' : 'Fim da fuga')
+      : 'Corrida concluída!';
+  document.getElementById('finish-position').textContent =
+    requestedMode === 'escape'
+      ? Math.floor(survivalTime) + 's SOBREVIVIDOS'
+      : place + 'º LUGAR';
   document.getElementById('finish-stats').textContent =
-    'Tempo: ' + formatRaceTime(raceTime) + ' · ' +
-    points.toLocaleString('pt-BR') + ' pontos · ' + coinCount + ' moedas';
+    requestedMode === 'escape'
+      ? 'Tempo: ' + formatRaceTime(survivalTime) + ' · ' +
+        score.toLocaleString('pt-BR') + ' pontos · ' + coinCount + ' moedas · Recorde: ' +
+        formatRaceTime(bestSurvival)
+      : 'Tempo: ' + formatRaceTime(raceTime) + ' · ' +
+        score.toLocaleString('pt-BR') + ' pontos · ' + coinCount + ' moedas';
+  document.getElementById('restart-button').textContent =
+    requestedMode === 'escape' ? 'TENTAR NOVAMENTE' : 'CORRER NOVAMENTE';
   document.getElementById('finish-overlay').classList.add('visible');
   document.getElementById('pause-overlay').classList.remove('visible');
 }
@@ -556,6 +588,9 @@ function restartRace() {
   car.position.copy(playerPosition);
   car.rotation.y = playerHeading;
   raceTime = 0;
+  survivalTime = 0;
+  policeGap = 72;
+  escapeCaught = false;
   countdown = 3.5;
   raceFinished = false;
   lateral = 0;
@@ -572,7 +607,16 @@ function restartRace() {
     r.speed = 0;
     r.targetSpeed = 29 + i * 1.6;
   });
-  coins.forEach(item => { item.collected = false; item.respawnAt = 0; item.mesh.visible = true; });
+  coins.forEach(item => {
+    item.s = item.startS;
+    item.off = item.startOff;
+    const original = pose(item.s, item.off);
+    item.mesh.position.copy(original.p).add(new THREE.Vector3(0, 1.32, 0));
+    item.mesh.rotation.y = Math.atan2(original.t.x, original.t.z);
+    item.collected = false;
+    item.respawnAt = 0;
+    item.mesh.visible = true;
+  });
   document.getElementById('finish-overlay').classList.remove('visible');
   document.getElementById('pause-overlay').classList.remove('visible');
   document.getElementById('pause-button').textContent = 'Ⅱ';
@@ -589,7 +633,29 @@ const mainMenu = document.getElementById('main-menu');
 const settingsScreen = document.getElementById('settings-screen');
 const modeScreen = document.getElementById('mode-screen');
 const classicScreen = document.getElementById('classic-screen');
-if (queryParams.has('track') || queryParams.has('mode')) { mainMenu.classList.add('hidden'); modeScreen.classList.remove('hidden'); }
+
+function launchEscape() {
+  menuOpen = false;
+  mainMenu.classList.add('hidden');
+  modeScreen.classList.add('hidden');
+  classicScreen.classList.add('hidden');
+  settingsScreen.classList.add('hidden');
+  countdown = 3.5;
+  document.getElementById('start-countdown').classList.add('visible');
+  document.getElementById('lap').textContent = 'FUGA';
+  document.querySelector('.race-panel .eyebrow').textContent = 'SOBREVIVÊNCIA';
+  document.getElementById('position').textContent = Math.round(policeGap) + ' m';
+  document.querySelector('.position-panel .eyebrow').textContent = 'DISTÂNCIA DA POLÍCIA';
+  document.getElementById('hint').textContent = 'FUJA DA POLÍCIA • COLETE MOEDAS • SOBREVIVA';
+}
+
+if (requestedMode === 'escape') {
+  launchEscape();
+} else if (queryParams.has('track')) {
+  mainMenu.classList.add('hidden');
+  modeScreen.classList.add('hidden');
+  classicScreen.classList.remove('hidden');
+}
 document.getElementById('play-button').addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   settingsScreen.classList.add('hidden');
@@ -610,13 +676,7 @@ document.getElementById('classic-back-to-menu').addEventListener('click', () => 
 });
 document.getElementById('escape-mode-button').addEventListener('click', () => {
   if (requestedMode !== 'escape') { location.search = '?mode=escape'; return; }
-  menuOpen = false; modeScreen.classList.add('hidden'); settingsScreen.classList.add('hidden');
-  countdown = 3.5; document.getElementById('start-countdown').classList.add('visible');
-  document.getElementById('lap').textContent = 'FUGA';
-  document.querySelector('.race-panel .eyebrow').textContent = 'SOBREVIVÊNCIA';
-  document.getElementById('position').textContent = '72 m';
-  document.querySelector('.position-panel .eyebrow').textContent = 'DISTÂNCIA DA POLÍCIA';
-  document.getElementById('hint').textContent = 'FUJA DA POLÍCIA • COLETE MOEDAS • SOBREVIVA';
+  launchEscape();
 });
 document.querySelectorAll('[data-track]').forEach(button => {
   button.addEventListener('click', () => {
@@ -658,7 +718,20 @@ function circularDifference(a, b) {
 }
 function updatePickups(items, dt) {
   for (const item of items) {
-    if (item.collected) continue;
+    if (item.collected) {
+      if (requestedMode === 'escape' && item.respawnAt && clock.elapsedTime >= item.respawnAt) {
+        const index = items.indexOf(item);
+        item.s = wrap(playerProgress + 80 + index * 13);
+        item.off = index % 2 ? -2.8 : 2.8;
+        const next = pose(item.s, item.off);
+        item.mesh.position.copy(next.p).add(new THREE.Vector3(0, 1.32, 0));
+        item.mesh.rotation.y = Math.atan2(next.t.x, next.t.z);
+        item.mesh.visible = true;
+        item.collected = false;
+        item.respawnAt = 0;
+      }
+      if (item.collected) continue;
+    }
     item.mesh.rotation.y += dt * 1.8;
     item.mesh.position.y = 1.32 + Math.sin(clock.elapsedTime * 2.5 + item.s) * 0.12;
     const dx = item.mesh.position.x - playerPosition.x;
@@ -668,8 +741,7 @@ function updatePickups(items, dt) {
       item.mesh.visible = false;
       points += 100;
       coinCount++;
-      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
-      if (requestedMode === 'escape') item.respawnAt = clock.elapsedTime + 1.5;
+      item.respawnAt = requestedMode === 'escape' ? clock.elapsedTime + 1.5 : 0;
     }
   }
 }
@@ -795,16 +867,7 @@ function animate() {
       }
       // AI drivers collect the same coins as the player; a coin can only be claimed once.
       for (const item of coins) {
-        if (item.collected) {
-        if (requestedMode === 'escape' && item.respawnAt && clock.elapsedTime >= item.respawnAt) {
-          item.s = wrap(playerProgress + 80 + coins.indexOf(item) * 13);
-          item.off = coins.indexOf(item) % 2 ? -2.8 : 2.8;
-          const next = pose(item.s, item.off);
-          item.mesh.position.copy(next.p).add(new THREE.Vector3(0, 1.32, 0));
-          item.mesh.visible = true; item.collected = false; item.respawnAt = 0;
-        }
-        continue;
-      }
+        if (item.collected) continue;
         const coinDistance = Math.hypot(
           item.mesh.position.x - rival.mesh.position.x,
           item.mesh.position.z - rival.mesh.position.z
@@ -819,14 +882,16 @@ function animate() {
     }
 
     if (requestedMode === 'escape' && raceCanMove) {
-      policeGap = Math.max(3.1, policeGap - dt * (0.24 + survivalTime * 0.012));
+      const playerSpeedKmh = speed * 3;
+      const closingRate = 1.1 + survivalTime * 0.035 - Math.min(playerSpeedKmh, 180) * 0.018;
+      policeGap = THREE.MathUtils.clamp(policeGap - closingRate * dt, 3.1, 150);
       for (const cop of police) {
-        const copProgress = playerProgress - policeGap - cop.delay;
+        const copProgress = playerProgress - policeGap / spacing - cop.delay;
         const q = pose(copProgress, cop.offset);
         cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;
         cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
       }
-      if (policeGap <= 4.2) { finishRace(true); }
+      if (policeGap <= 3.2) { finishRace(true); }
     }
 
     // Car-to-car collision. The player is pushed out of the rival's body,
@@ -866,7 +931,8 @@ function animate() {
 
     const kmh = Math.round(speed * 3.0);
     document.getElementById('speed').textContent = kmh;
-    document.getElementById('points').textContent = points.toLocaleString('pt-BR');
+    const liveScore = points + (requestedMode === 'escape' ? Math.floor(survivalTime * 10) : 0);
+    document.getElementById('points').textContent = liveScore.toLocaleString('pt-BR');
     document.getElementById('coins').textContent = coinCount;
 
     const ahead = rivals.filter(r => r.progress > playerProgress).length;
