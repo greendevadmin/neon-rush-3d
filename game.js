@@ -605,6 +605,9 @@ document.getElementById('classic-mode-button').addEventListener('click', () => {
 document.getElementById('back-to-modes').addEventListener('click', () => {
   classicScreen.classList.add('hidden'); modeScreen.classList.remove('hidden');
 });
+document.getElementById('classic-back-to-menu').addEventListener('click', () => {
+  classicScreen.classList.add('hidden'); mainMenu.classList.remove('hidden');
+});
 document.getElementById('escape-mode-button').addEventListener('click', () => {
   if (requestedMode !== 'escape') { location.search = '?mode=escape'; return; }
   menuOpen = false; modeScreen.classList.add('hidden'); settingsScreen.classList.add('hidden');
