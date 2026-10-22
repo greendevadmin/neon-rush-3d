@@ -428,10 +428,11 @@ let escapeCaught = false;
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 if (requestedMode !== 'escape') {
   for (let i = 0; i < 5; i++) {
-  // Rivals start ahead of the player; their positions and pace are updated by the AI.
+  // Place all six cars on a grid ordered by the previous race result.
+  const rivalGridSlot = i + 1 < startingGridPosition ? i + 1 : i + 2;
   const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
-  const startProgress = START_GRID_INDEX + (i + 1) * 7;
+  const startProgress = START_GRID_INDEX - (rivalGridSlot - 1) * 7;
   rivals.push({
     mesh,
     progress: startProgress,
@@ -811,7 +812,8 @@ function restartRace() {
   paused = false;
   for (const key in keys) keys[key] = false;
   rivals.forEach((r, i) => {
-    r.progress = START_GRID_INDEX + (i + 1) * 7;
+    const rivalGridSlot = i + 1 < cupProgress.grid ? i + 1 : i + 2;
+    r.progress = START_GRID_INDEX - (rivalGridSlot - 1) * 7;
     r.s = wrap(r.progress);
     r.coins = 0;
     r.speed = 0;
@@ -1094,7 +1096,7 @@ function animate() {
       rival.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
       if (countdown <= 0 && requestedMode !== 'escape') {
         // Rivals accelerate smoothly and become faster as they collect coins.
-        const maxRivalSpeed = (99 + rival.coins * 20) / 3;
+        const maxRivalSpeed = (99 + rival.coins * 10) / 3;
         rival.speed = Math.min(maxRivalSpeed, rival.speed + 13 * dt);
         rival.speed = Math.min(rival.speed, rival.targetSpeed + rival.coins * 2.4);
         rival.progress += rival.speed * dt / spacing;
