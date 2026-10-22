@@ -254,7 +254,7 @@ function addCanyonScenery() {
   const sandstone = [0xb86f43, 0x9c5738, 0xd18a55, 0x80503a];
   for (let i = 0; i < 64; i++) {
     const angle = i * 2.399;
-    const radius = 250 + (i % 6) * 24;
+    const radius = 340 + (i % 6) * 28;
     const height = 28 + (i * 13 % 65);
     const width = 17 + (i % 4) * 7;
     const rock = new THREE.Mesh(
@@ -271,23 +271,13 @@ function addCanyonScenery() {
       scene.add(cap);
     }
   }
-  // Tall canyon walls frame the course without touching the road.
-  for (const sideSign of [-1, 1]) {
-    for (let i = 0; i < 12; i++) {
-      const z = -260 + i * 48;
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(22 + (i % 3) * 8, 42 + (i % 4) * 8, 42), mat(sandstone[i % sandstone.length], 1));
-      wall.position.set(sideSign * (265 + (i % 2) * 22), wall.geometry.parameters.height / 2 - 1, z);
-      wall.rotation.y = sideSign * (i % 3 - 1) * 0.08;
-      scene.add(wall);
-    }
-  }
 }
 function addUrbanScenery() {
   const buildingMats = [0x182b46, 0x243954, 0x263044, 0x33435e];
   const windowMat = new THREE.MeshBasicMaterial({ color: 0x25dfff });
   for (let i = 0; i < 76; i++) {
     const angle = i * 2.399;
-    const radius = 235 + (i % 8) * 22;
+    const radius = 330 + (i % 8) * 25;
     const height = 22 + (i * 19 % 92);
     const width = 12 + (i % 4) * 5;
     const x = Math.cos(angle) * radius;
@@ -304,7 +294,7 @@ function addUrbanScenery() {
   // Neon light strips around the outside of the circuit.
   for (let i = 0; i < 30; i++) {
     const angle = i * Math.PI * 2 / 30;
-    const radius = 190;
+    const radius = 300;
     const light = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 5), new THREE.MeshBasicMaterial({
       color: i % 2 ? 0xff3bc8 : 0x20dfff
     }));
@@ -440,20 +430,7 @@ for (let s = 35; s < N; s += 82) {
   scene.add(ring);
   coins.push({ mesh: ring, s, off, collected: false });
 }
-const boosts = [];
-for (let s = 120; s < N; s += 245) {
-  const q = pose(s, 0);
-  const crystal = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.8, 0),
-    new THREE.MeshStandardMaterial({
-      color: 0x13dfff, emissive: 0x0079ff, emissiveIntensity: 1.5,
-      metalness: 0.32, roughness: 0.18
-    })
-  );
-  crystal.position.copy(q.p).add(new THREE.Vector3(0, 1.45, 0));
-  scene.add(crystal);
-  boosts.push({ mesh: crystal, s, off: 0, collected: false });
-}
+// Nitro pickups removed; the racing surface stays clear.
 
 // A real minimap path follows the repaired track.
 const mapPath = document.getElementById('maptrack');
@@ -488,7 +465,7 @@ let raceTime = 0;
 let raceFinished = false;
 let lateral = 0;
 let speed = 0;
-let nitro = 100;
+
 let points = 0;
 let coinCount = 0;
 let paused = false;
@@ -565,7 +542,7 @@ function restartRace() {
   raceFinished = false;
   lateral = 0;
   speed = 0;
-  nitro = 100;
+
   points = 0;
   coinCount = 0;
   paused = false;
@@ -574,10 +551,7 @@ function restartRace() {
     r.progress = -(i + 1) * 22;
     r.s = wrap(r.progress);
   });
-  [...coins, ...boosts].forEach(item => {
-    item.collected = false;
-    item.mesh.visible = true;
-  });
+  coins.forEach(item => { item.collected = false; item.mesh.visible = true; });
   document.getElementById('finish-overlay').classList.remove('visible');
   document.getElementById('pause-overlay').classList.remove('visible');
   document.getElementById('pause-button').textContent = 'Ⅱ';
@@ -585,7 +559,7 @@ function restartRace() {
   document.getElementById('race-time').textContent = '00:00.0';
   document.getElementById('points').textContent = '0';
   document.getElementById('coins').textContent = '0';
-  document.getElementById('nitro-fill').style.width = '100%';
+
   document.getElementById('position').textContent = '1/6';
 }
 document.getElementById('restart-button').addEventListener('click', restartRace);
@@ -641,22 +615,18 @@ function circularDifference(a, b) {
   if (d < -N / 2) d += N;
   return d;
 }
-function updatePickups(items, dt, type) {
+function updatePickups(items, dt) {
   for (const item of items) {
     if (item.collected) continue;
-    item.mesh.rotation.y += dt * (type === 'coin' ? 1.8 : 1.1);
-    item.mesh.position.y = (type === 'coin' ? 1.32 : 1.45) + Math.sin(clock.elapsedTime * 2.5 + item.s) * 0.12;
+    item.mesh.rotation.y += dt * 1.8;
+    item.mesh.position.y = 1.32 + Math.sin(clock.elapsedTime * 2.5 + item.s) * 0.12;
     const dx = item.mesh.position.x - playerPosition.x;
     const dz = item.mesh.position.z - playerPosition.z;
     if (Math.hypot(dx, dz) < 3.2) {
       item.collected = true;
       item.mesh.visible = false;
-      if (type === 'coin') {
-        points += 100;
-        coinCount++;
-      } else {
-        nitro = Math.min(100, nitro + 42);
-      }
+      points += 100;
+      coinCount++;
     }
   }
 }
@@ -681,19 +651,13 @@ function animate() {
     const braking = keys.s || keys.arrowdown;
     const baseSteering = (keys.a || keys.arrowleft ? 1 : 0) + (keys.d || keys.arrowright ? -1 : 0);
     const steering = baseSteering * (invertSteering ? -1 : 1);
-    const usingNitro = countdown <= 0 && (keys[' '] || keys.shift) && nitro > 3 && speed > 3;
-    if (usingNitro) {
-      speed += 27 * dt;
-      nitro = Math.max(0, nitro - 26 * dt);
-    } else {
-      nitro = Math.min(100, nitro + 5.5 * dt);
-    }
+    
     const engineAcceleration = countdown <= 0 && accelerating ? 20 : 0;
     const brakeForce = countdown <= 0 && braking ? 34 : 0;
     const rollingResistance = speed > 0 ? (accelerating ? 1.2 : 11.5) : 0;
     speed += (engineAcceleration - brakeForce - rollingResistance) * dt;
-    speed = THREE.MathUtils.clamp(speed, 0, usingNitro ? 58 : 42);
-    if (!accelerating && !usingNitro && speed < 0.35) speed = 0;
+    speed = THREE.MathUtils.clamp(speed, 0, 42);
+    if (!accelerating && speed < 0.35) speed = 0;
 
     // Manual driving: steering changes the car's heading; the track never
     // pulls the player back onto its spline.
@@ -804,8 +768,7 @@ function animate() {
       }
     }
 
-    updatePickups(coins, dt, 'coin');
-    updatePickups(boosts, dt, 'boost');
+    updatePickups(coins, dt);
 
     const behind = player.p.clone().addScaledVector(player.t, -10.8);
     behind.y += 5.2;
@@ -818,7 +781,6 @@ function animate() {
     document.getElementById('speed').textContent = kmh;
     document.getElementById('points').textContent = points.toLocaleString('pt-BR');
     document.getElementById('coins').textContent = coinCount;
-    document.getElementById('nitro-fill').style.width = nitro + '%';
 
     const ahead = rivals.filter(r => r.progress > playerProgress).length;
     document.getElementById('position').textContent = (ahead + 1) + '/6';
@@ -830,11 +792,7 @@ function animate() {
       (-Math.atan2(player.t.x, player.t.z) * 180 / Math.PI) + ' ' + marker.x + ' ' + marker.y + ')');
 
     const hint = document.getElementById('hint');
-    if (coins.some(c => !c.collected) && Math.floor(clock.elapsedTime) % 18 < 6) {
-      hint.textContent = 'PEGUE AS MOEDAS • ESPAÇO PARA USAR O NITRO';
-    } else {
-      hint.textContent = 'MODO MANUAL • WASD / SETAS PARA DIRIGIR • ESC PARA PAUSAR';
-    }
+    hint.textContent = 'PISTA LIVRE • PEGUE AS MOEDAS • MODO MANUAL';
   } else {
     camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
   }
