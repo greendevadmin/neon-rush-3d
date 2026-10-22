@@ -389,16 +389,18 @@ scene.add(car);
 const rivals = [];
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 for (let i = 0; i < 5; i++) {
-  // Five regular competitors line up just behind the player's start position.
+  // Rivals start ahead of the player; their positions and pace are updated by the AI.
   const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
-  const startProgress = -(i + 1) * 22;
+  const startProgress = (i + 1) * 22;
   rivals.push({
     mesh,
     progress: startProgress,
     s: wrap(startProgress),
     off: i % 2 ? 2.7 : -2.6,
-    pace: 24 + i * 1.4
+    coins: 0,
+    speed: 0,
+    targetSpeed: 29 + i * 1.6
   });
 }
 
@@ -550,8 +552,11 @@ function restartRace() {
   paused = false;
   for (const key in keys) keys[key] = false;
   rivals.forEach((r, i) => {
-    r.progress = -(i + 1) * 22;
+    r.progress = (i + 1) * 22;
     r.s = wrap(r.progress);
+    r.coins = 0;
+    r.speed = 0;
+    r.targetSpeed = 29 + i * 1.6;
   });
   coins.forEach(item => { item.collected = false; item.mesh.visible = true; });
   document.getElementById('finish-overlay').classList.remove('visible');
@@ -562,7 +567,7 @@ function restartRace() {
   document.getElementById('points').textContent = '0';
   document.getElementById('coins').textContent = '0';
 
-  document.getElementById('position').textContent = '1/6';
+  document.getElementById('position').textContent = '6/6';
 }
 document.getElementById('restart-button').addEventListener('click', restartRace);
 
@@ -737,12 +742,35 @@ function animate() {
     const player = { p: playerPosition, t: forward };
 
     for (const rival of rivals) {
-      if (countdown <= 0) rival.progress += rival.pace * dt / spacing;
-      rival.s = wrap(rival.progress);
       const q = pose(rival.s, rival.off);
       rival.mesh.position.copy(q.p);
       rival.mesh.position.y = 0;
       rival.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
+      if (countdown <= 0) {
+        // Rivals accelerate smoothly and become faster as they collect coins.
+        const maxRivalSpeed = (99 + rival.coins * 20) / 3;
+        rival.speed = Math.min(maxRivalSpeed, rival.speed + 13 * dt);
+        rival.speed = Math.min(rival.speed, rival.targetSpeed + rival.coins * 2.4);
+        rival.progress += rival.speed * dt / spacing;
+        rival.s = wrap(rival.progress);
+        const updatedPose = pose(rival.s, rival.off);
+        rival.mesh.position.copy(updatedPose.p);
+        rival.mesh.rotation.y = Math.atan2(updatedPose.t.x, updatedPose.t.z);
+      }
+      // AI drivers collect the same coins as the player; a coin can only be claimed once.
+      for (const item of coins) {
+        if (item.collected) continue;
+        const coinDistance = Math.hypot(
+          item.mesh.position.x - rival.mesh.position.x,
+          item.mesh.position.z - rival.mesh.position.z
+        );
+        if (coinDistance < 3.2) {
+          item.collected = true;
+          item.mesh.visible = false;
+          rival.coins++;
+          rival.targetSpeed = Math.min((99 + rival.coins * 20) / 3, rival.targetSpeed + 2.4);
+        }
+      }
     }
 
     // Car-to-car collision. The player is pushed out of the rival's body,
