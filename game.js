@@ -1089,6 +1089,7 @@ function animate() {
         if (coinDistance < 3.2) {
           item.collected = true;
           item.mesh.visible = false;
+          item.respawnAt = clock.elapsedTime + 1.5;
           rival.coins++;
           rival.targetSpeed = Math.min((99 + rival.coins * 20) / 3, rival.targetSpeed + 2.4);
         }
