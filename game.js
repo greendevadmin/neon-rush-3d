@@ -25,7 +25,7 @@ function saveCupProgress(progress) {
 }
 let cupProgress = requestedMode === 'escape' ? { race: 1, grid: 1 } : readCupProgress();
 const startingGridPosition = cupProgress.grid;
-const startingGridIndex = START_GRID_INDEX - (startingGridPosition - 1) * 7;
+const startingGridIndex = START_GRID_INDEX;
 const controlPoints = requestedMode === 'escape'
   ? Array.from({ length: 3000 }, (_, i) => {
       const z = i * 18;
@@ -428,16 +428,17 @@ let escapeCaught = false;
 const rivalColors = [0xf1f1eb, 0xe53f3f, 0xf0b82e, 0x2ab66a, 0x752fea];
 if (requestedMode !== 'escape') {
   for (let i = 0; i < 5; i++) {
-  // Place all six cars on a grid ordered by the previous race result.
-  const rivalGridSlot = i + 1 < startingGridPosition ? i + 1 : i + 2;
+  // Rivals occupy their classified position in the two-column starting grid.
+  const rivalGridRank = i + 1 < startingGridPosition ? i + 1 : i + 2;
+  const gridSlot = getGridPlacement(rivalGridRank);
   const mesh = makeCar(rivalColors[i]);
   scene.add(mesh);
-  const startProgress = START_GRID_INDEX - (rivalGridSlot - 1) * 7;
+  const startProgress = gridSlot.progress;
   rivals.push({
     mesh,
     progress: startProgress,
     s: wrap(startProgress),
-    off: i % 2 ? 2.7 : -2.7,
+    off: gridSlot.offset,
     coins: 0,
     speed: 0,
     targetSpeed: 29 + i * 1.6
@@ -477,6 +478,25 @@ function pose(s, offset = 0) {
   const lateral = new THREE.Vector3(t.z, 0, -t.x);
   p.addScaledVector(lateral, offset);
   return { p, t };
+}
+
+// F1-style grid: rank 1 is at the front-left, rank 2 is slightly behind
+// on the right, then ranks 3/4 repeat the same two-column pattern.
+// Distances are expressed in world units and converted to path samples so
+// the layout remains consistent across all circuits.
+function getGridPlacement(rank) {
+  const safeRank = Math.max(1, Math.floor(rank));
+  const row = Math.floor((safeRank - 1) / 2);
+  const column = (safeRank - 1) % 2;
+  const rowSpacing = 5.4;
+  const staggerSpacing = 1.5;
+  const longitudinalOffset = (row * rowSpacing + column * staggerSpacing) / spacing;
+  const lateralLimit = Math.max(1.8, ROAD_WIDTH / 2 - 1.35);
+  const columnOffset = column === 0 ? -Math.min(2.65, lateralLimit) : Math.min(2.65, lateralLimit);
+  return {
+    progress: START_GRID_INDEX - longitudinalOffset,
+    offset: columnOffset
+  };
 }
 
 // Collectibles are placed on the road itself and use the same track coordinates.
@@ -614,13 +634,14 @@ mapPath.setAttribute('d', (escapeMode ? path.filter((p, i) => i % 100 === 0 || i
 
 const TOTAL_LAPS = 3;
 let countdown = 3.5;
-let playerProgress = startingGridIndex;
-let s = wrap(startingGridIndex);
+const initialPlayerGrid = getGridPlacement(startingGridPosition);
+let playerProgress = initialPlayerGrid.progress;
+let s = wrap(initialPlayerGrid.progress);
 let currentLap = 1;
 let completedLaps = 0;
-let lastNearestIndex = wrap(startingGridIndex);
-const playerPosition = pose(wrap(startingGridIndex), -2.7).p;
-let playerHeading = Math.atan2(tangent(wrap(startingGridIndex)).x, tangent(wrap(startingGridIndex)).z);
+let lastNearestIndex = wrap(initialPlayerGrid.progress);
+const playerPosition = pose(wrap(initialPlayerGrid.progress), initialPlayerGrid.offset).p;
+let playerHeading = Math.atan2(tangent(wrap(initialPlayerGrid.progress)).x, tangent(wrap(initialPlayerGrid.progress)).z);
 let raceTime = 0;
 let raceFinished = false;
 let survivalTime = 0;
@@ -778,13 +799,14 @@ function finishRace(caught = false) {
 }
 function restartRace() {
   cupProgress = requestedMode === 'escape' ? { race: 1, grid: 1 } : readCupProgress();
-  const gridIndex = START_GRID_INDEX - (cupProgress.grid - 1) * 7;
+  const playerGrid = getGridPlacement(cupProgress.grid);
+  const gridIndex = playerGrid.progress;
   playerProgress = gridIndex;
   s = wrap(gridIndex);
   currentLap = 1;
   completedLaps = 0;
   lastNearestIndex = wrap(gridIndex);
-  playerPosition.copy(pose(wrap(gridIndex), -2.7).p);
+  playerPosition.copy(pose(wrap(gridIndex), playerGrid.offset).p);
   playerHeading = Math.atan2(tangent(wrap(gridIndex)).x, tangent(wrap(gridIndex)).z);
   car.position.copy(playerPosition);
   car.rotation.y = playerHeading;
@@ -812,9 +834,11 @@ function restartRace() {
   paused = false;
   for (const key in keys) keys[key] = false;
   rivals.forEach((r, i) => {
-    const rivalGridSlot = i + 1 < cupProgress.grid ? i + 1 : i + 2;
-    r.progress = START_GRID_INDEX - (rivalGridSlot - 1) * 7;
+    const rivalGridRank = i + 1 < cupProgress.grid ? i + 1 : i + 2;
+    const gridSlot = getGridPlacement(rivalGridRank);
+    r.progress = gridSlot.progress;
     r.s = wrap(r.progress);
+    r.off = gridSlot.offset;
     r.coins = 0;
     r.speed = 0;
     r.targetSpeed = 29 + i * 1.6;
