@@ -44,12 +44,8 @@
   document.querySelectorAll('[data-track]').forEach(button => {
     button.addEventListener('click', () => {
       const chosen = button.dataset.track;
-      const params = new URLSearchParams(location.search);
-      if (params.get('track') === chosen && params.get('mode') !== 'escape') {
-        location.search = '?track=' + encodeURIComponent(chosen) + '&start=1';
-      } else {
-        location.search = '?track=' + encodeURIComponent(chosen);
-      }
+      // Selecting a track should launch it immediately, even when changing tracks.
+      location.search = '?track=' + encodeURIComponent(chosen) + '&start=1';
     });
   });
 
