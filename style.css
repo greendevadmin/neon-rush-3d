@@ -225,3 +225,17 @@ box-shadow:0 18px 70px #0008,inset 0 0 70px #00aaff13}
 /* USB controller status and Gamepad API feedback. */
 #controller-status{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:12;max-width:90vw;padding:6px 10px;border:1px solid #5c748c66;border-radius:999px;background:#071426d9;color:#a9c1d3;font-size:10px;letter-spacing:.3px;text-align:center;pointer-events:none}
 #controller-status.connected{border-color:#21d8a1a6;color:#8effd4}
+
+
+/* Fix menu input on touch devices and keep the menu above the WebGL canvas. */
+canvas { pointer-events: none; }
+.menu-screen { z-index: 1000; pointer-events: auto; }
+.menu-screen button,
+.menu-screen input,
+.menu-screen label,
+.menu-screen a {
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-screen button { position: relative; }
