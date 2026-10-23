@@ -258,31 +258,138 @@ function addMountainRing() {
   }
 }
 function addCoastalScenery() {
-  addMountainRing();
-  const ocean = new THREE.Mesh(
-    new THREE.PlaneGeometry(1400, 1500),
-    new THREE.MeshStandardMaterial({ color: 0x167fa8, roughness: 0.24, metalness: 0.18 })
-  );
+  // Tropical Costa Dourada scenery is placed relative to the existing road.
+  // The road mesh, checkpoints, barriers, collision references and car starts
+  // remain untouched; decorative objects stay beyond the guardrails.
+  const oceanMat = new THREE.MeshStandardMaterial({
+    color: 0x12b8d0, roughness: 0.22, metalness: 0.12,
+    emissive: 0x063c55, emissiveIntensity: 0.12
+  });
+  const sandMat = mat(0xe8c36c, 0.96);
+  const deepSandMat = mat(0xcda35a, 1);
+  const palmTrunkMat = mat(0x8c5b32, 0.94);
+  const palmLeafMats = [mat(0x23834c, 0.86), mat(0x3ca85c, 0.84), mat(0x176b43, 0.9)];
+  const houseMats = [mat(0xffe7bd, 0.88), mat(0xf2a56b, 0.88), mat(0xf4d7a0, 0.9), mat(0xc9e7dc, 0.9)];
+  const roofMat = mat(0xa9432b, 0.92);
+  const bridgeMat = mat(0xd7d5c8, 0.75);
+  const waterShimmerMat = new THREE.MeshBasicMaterial({ color: 0x8af4f0, transparent: true, opacity: 0.32 });
+
+  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1900, 1900), oceanMat);
   ocean.rotation.x = -Math.PI / 2;
-  ocean.position.set(830, -3.1, 0);
+  ocean.position.set(560, -3.3, -80);
+  ocean.receiveShadow = true;
   scene.add(ocean);
-  const cliffRock = mat(0x777363, 1);
-  for (let i = 0; i < 22; i++) {
-    const rock = new THREE.Mesh(new THREE.ConeGeometry(12 + (i % 4) * 4, 20 + (i % 5) * 6, 7), cliffRock);
-    rock.position.set(300 + (i % 4) * 20, -3 + (i % 3), -260 + i * 24);
-    rock.rotation.z = i % 2 ? 0.18 : -0.12;
-    scene.add(rock);
+
+  // Broad sandy coves between the circuit and the sea, away from road edges.
+  for (let i = 0; i < 9; i++) {
+    const beach = new THREE.Mesh(new THREE.CircleGeometry(34 + (i % 3) * 10, 20), i % 2 ? sandMat : deepSandMat);
+    beach.rotation.x = -Math.PI / 2;
+    beach.scale.set(1.8, 0.68, 1);
+    beach.position.set(270 + (i % 3) * 25, -0.67, -340 + i * 82);
+    scene.add(beach);
   }
-  const cliff = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 20), cliffRock);
-  cliff.position.set(-290, 4, 220);
-  scene.add(cliff);
-  const waterfall = new THREE.Mesh(new THREE.PlaneGeometry(8, 23), new THREE.MeshStandardMaterial({
-    color: 0x82d6ee, emissive: 0x1a6d91, emissiveIntensity: 0.28,
-    transparent: true, opacity: 0.82, roughness: 0.22, side: THREE.DoubleSide
-  }));
-  waterfall.position.set(-279, 0, 223);
-  waterfall.rotation.y = -0.18;
-  scene.add(waterfall);
+
+  // Layered tropical cliffs on the far side of the circuit.
+  const cliffMats = [mat(0x8b7657, 1), mat(0x6f7255, 1), mat(0xa18b67, 1)];
+  for (let i = 0; i < 30; i++) {
+    const x = -360 - (i % 4) * 17;
+    const z = -420 + i * 29;
+    const height = 22 + (i % 6) * 7;
+    const cliff = new THREE.Mesh(new THREE.ConeGeometry(22 + (i % 4) * 5, height, 7), cliffMats[i % cliffMats.length]);
+    cliff.position.set(x, height / 2 - 1, z);
+    cliff.rotation.z = (i % 2 ? 1 : -1) * 0.12;
+    cliff.castShadow = true;
+    scene.add(cliff);
+  }
+
+  function addPalm(x, z, scale = 1) {
+    const palm = new THREE.Group();
+    palm.position.set(x, 0, z);
+    palm.scale.setScalar(scale);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.68, 7.5, 7), palmTrunkMat);
+    trunk.position.y = 3.65;
+    trunk.rotation.z = 0.08;
+    trunk.castShadow = true;
+    palm.add(trunk);
+    const crown = new THREE.Group();
+    crown.position.y = 7.1;
+    for (let j = 0; j < 7; j++) {
+      const angle = j * Math.PI * 2 / 7;
+      const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 5.6), palmLeafMats[j % palmLeafMats.length]);
+      leaf.position.set(Math.cos(angle) * 1.65, -0.25, Math.sin(angle) * 1.65);
+      leaf.rotation.y = -angle;
+      leaf.rotation.x = -0.18;
+      leaf.castShadow = true;
+      crown.add(leaf);
+    }
+    palm.add(crown);
+    scene.add(palm);
+  }
+
+  function addBeachHouse(x, z, scale = 1) {
+    const house = new THREE.Group();
+    house.position.set(x, 0, z);
+    house.scale.setScalar(scale);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(8, 4.4, 6), houseMats[Math.abs(Math.round(x + z)) % houseMats.length]);
+    body.position.y = 2.2;
+    body.castShadow = true;
+    house.add(body);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(5.8, 2.5, 4), roofMat);
+    roof.position.y = 5.55;
+    roof.rotation.y = Math.PI / 4;
+    roof.castShadow = true;
+    house.add(roof);
+    const porch = new THREE.Mesh(new THREE.BoxGeometry(9, 0.25, 2.2), mat(0x9c6b43, 0.9));
+    porch.position.set(0, 1.2, 3.8);
+    house.add(porch);
+    scene.add(house);
+  }
+
+  // Props are distributed beside the circuit using its existing centerline.
+  // Large offsets keep them clear of rails and the full driving corridor.
+  for (let i = 0; i < N; i += 23) {
+    const p = path[i];
+    const s = side(i);
+    const sign = (Math.floor(i / 23) % 2 === 0) ? 1 : -1;
+    const base = p.clone().addScaledVector(s, sign * (ROAD_WIDTH / 2 + KERB_WIDTH + 19 + (i % 3) * 5));
+    if (i % 46 === 0) addPalm(base.x, base.z, 0.8 + (i % 4) * 0.08);
+    if (i % 92 === 0) addBeachHouse(base.x + sign * 12, base.z + 8, 0.65 + (i % 3) * 0.08);
+  }
+
+  // A coastal viaduct, placed well outside the drivable ribbon as a landmark.
+  const bridge = new THREE.Group();
+  bridge.position.set(295, 1.2, 30);
+  bridge.rotation.y = 0.12;
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(145, 2.2, 10), bridgeMat);
+  deck.position.y = 8;
+  deck.castShadow = true;
+  deck.receiveShadow = true;
+  bridge.add(deck);
+  for (let i = 0; i < 6; i++) {
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(3.2, 8, 5), bridgeMat);
+    pier.position.set(-62 + i * 24, 3.5, 0);
+    bridge.add(pier);
+  }
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(145, 0.45, 0.35), white);
+  rail.position.set(0, 9.3, -4.6);
+  bridge.add(rail);
+  scene.add(bridge);
+
+  // Small glints on the water suggest sun reflections without heavy effects.
+  for (let i = 0; i < 45; i++) {
+    const glint = new THREE.Mesh(new THREE.BoxGeometry(3 + (i % 4), 0.025, 0.16), waterShimmerMat);
+    glint.position.set(360 + (i % 9) * 28, -3.12, -360 + Math.floor(i / 9) * 150 + (i % 3) * 8);
+    glint.rotation.y = (i % 2) * 0.12;
+    scene.add(glint);
+  }
+
+  // Tropical foliage and distant village silhouettes complete the coastline.
+  for (let i = 0; i < 26; i++) {
+    const x = 350 + (i % 5) * 22;
+    const z = -430 + i * 34;
+    if (i % 3 === 0) addPalm(x, z, 0.72);
+    if (i % 4 === 0) addBeachHouse(x + 14, z + 5, 0.48);
+  }
 }
 function addCanyonScenery() {
   const sandstone = [0xb86f43, 0x9c5738, 0xd18a55, 0x80503a];
