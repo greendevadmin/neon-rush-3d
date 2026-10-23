@@ -526,8 +526,11 @@ if (escapeMode) {
   const barrierRed = mat(0xe52e3f, 0.62);
   const barrierWhite = mat(0xf4f5ee, 0.62);
   const barrierDark = mat(0x202936, 0.8);
-  for (let i = 0; i < 24; i++) {
-    const barrierS = 190 + i * 245;
+  // Place roadblocks closer to the start and spread them along the escape road.
+  // The path coordinate is measured in samples, so these values make barriers
+  // appear regularly during a normal-length escape run.
+  for (let i = 0; i < 30; i++) {
+    const barrierS = 45 + i * 180;
     const group = new THREE.Group();
     for (const offset of [-4.8, 4.8]) {
       const block = new THREE.Group();
@@ -1172,11 +1175,23 @@ function animate() {
       const playerSpeedKmh = speed * 3;
       const closingRate = 1.1 + survivalTime * 0.035 - Math.min(playerSpeedKmh, 180) * 0.018;
       policeGap = THREE.MathUtils.clamp(policeGap - closingRate * dt, 3.1, 150);
+      // Pursuit uses the player's real world position, not only the road's
+      // centerline progress. Police therefore follow when the player steers wide.
+      const playerForward = new THREE.Vector3(Math.sin(playerHeading), 0, Math.cos(playerHeading));
+      const playerRight = new THREE.Vector3(playerForward.z, 0, -playerForward.x);
       for (const cop of police) {
-        const copProgress = Math.max(0, playerProgress - policeGap / spacing - cop.delay);
-        const q = pose(copProgress, cop.offset);
-        cop.mesh.position.copy(q.p); cop.mesh.position.y = 0;
-        cop.mesh.rotation.y = Math.atan2(q.t.x, q.t.z);
+        const target = playerPosition.clone()
+          .addScaledVector(playerForward, -(policeGap + cop.delay * 2.2))
+          .addScaledVector(playerRight, cop.offset);
+        const toTarget = target.clone().sub(cop.mesh.position);
+        const distanceToTarget = toTarget.length();
+        const chaseSpeed = 34 + Math.min(survivalTime * 0.18, 16);
+        if (distanceToTarget > 0.001) {
+          cop.mesh.position.addScaledVector(toTarget, Math.min(1, chaseSpeed * dt / distanceToTarget));
+        }
+        cop.mesh.position.y = 0;
+        const towardPlayer = playerPosition.clone().sub(cop.mesh.position);
+        cop.mesh.rotation.y = Math.atan2(towardPlayer.x, towardPlayer.z);
       }
       if (policeGap <= 3.2) { finishRace(true); }
     }
