@@ -1256,17 +1256,7 @@ document.getElementById('escape-mode-button').addEventListener('click', () => {
   if (requestedMode !== 'escape') { location.search = '?mode=escape'; return; }
   launchEscape();
 });
-document.querySelectorAll('[data-track]').forEach(button => {
-  button.addEventListener('click', () => {
-    const chosen = button.dataset.track;
-    if (chosen !== selectedTrack || requestedMode !== 'classic') { location.search = '?track=' + encodeURIComponent(chosen) + '&start=1'; return; }
-    menuOpen = false;
-    classicScreen.classList.add('hidden');
-    settingsScreen.classList.add('hidden');
-    countdown = 3.5;
-    document.getElementById('start-countdown').classList.add('visible');
-  });
-});
+// Track selection is handled only by menu.js to avoid duplicate click handlers.
 document.getElementById('exit-button').addEventListener('click', () => {
   document.querySelector('#main-menu .menu-subtitle').textContent = 'Você pode fechar esta aba para sair do jogo.';
 });
