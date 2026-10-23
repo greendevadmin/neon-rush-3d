@@ -1256,7 +1256,22 @@ document.getElementById('escape-mode-button').addEventListener('click', () => {
   if (requestedMode !== 'escape') { location.search = '?mode=escape'; return; }
   launchEscape();
 });
-// Track selection is handled only by menu.js to avoid duplicate click handlers.
+// menu.js owns track-card clicks. When the selected circuit is already loaded,
+// start it in place instead of reloading the page (important for the default Coast track).
+window.addEventListener('overdrive:start-race', () => {
+  menuOpen = false;
+  paused = false;
+  raceFinished = false;
+  mainMenu.classList.add('hidden');
+  modeScreen.classList.add('hidden');
+  classicScreen.classList.add('hidden');
+  settingsScreen.classList.add('hidden');
+  document.getElementById('finish-overlay').classList.remove('visible');
+  document.getElementById('pause-overlay').classList.remove('visible');
+  document.getElementById('start-countdown').textContent = '3';
+  countdown = 3.5;
+  document.getElementById('start-countdown').classList.add('visible');
+});
 document.getElementById('exit-button').addEventListener('click', () => {
   document.querySelector('#main-menu .menu-subtitle').textContent = 'Você pode fechar esta aba para sair do jogo.';
 });
