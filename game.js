@@ -34,22 +34,22 @@ const controlPoints = requestedMode === 'escape'
     })
   : trackLayouts[selectedTrack].map(p => new THREE.Vector3(p[0] * 1.5, p[1], p[2] * 1.5));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(selectedTrack === 'neon' ? 0x172a55 : selectedTrack === 'canyon' ? 0xd99a6a : 0xf2b487);
-scene.fog = new THREE.Fog(selectedTrack === 'neon' ? 0x263c68 : selectedTrack === 'canyon' ? 0xc98d62 : 0xe8b28b, 180, 620);
+scene.background = new THREE.Color(selectedTrack === 'neon' ? 0x050817 : selectedTrack === 'canyon' ? 0xd99a6a : 0xf2b487);
+scene.fog = new THREE.Fog(selectedTrack === 'neon' ? 0x10152d : selectedTrack === 'canyon' ? 0xc98d62 : 0xe8b28b, selectedTrack === 'neon' ? 260 : 180, selectedTrack === 'neon' ? 1050 : 620);
 
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.1, 1800);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = selectedTrack !== 'neon';
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xe9f6ff, 0x536043, 2.1));
-const sun = new THREE.DirectionalLight(0xffdfb0, 3.2);
+scene.add(new THREE.HemisphereLight(selectedTrack === 'neon' ? 0x7e8dff : 0xe9f6ff, selectedTrack === 'neon' ? 0x10152a : 0x536043, selectedTrack === 'neon' ? 1.05 : 2.1));
+const sun = new THREE.DirectionalLight(selectedTrack === 'neon' ? 0x9db8ff : 0xffdfb0, selectedTrack === 'neon' ? 0.55 : 3.2);
 sun.position.set(-100, 150, 75);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -555,35 +555,124 @@ function addCanyonScenery() {
   }
 }
 function addUrbanScenery() {
-  const buildingMats = [0x182b46, 0x243954, 0x263044, 0x33435e];
-  const windowMat = new THREE.MeshBasicMaterial({ color: 0x25dfff });
-  for (let i = 0; i < 76; i++) {
-    const angle = i * 2.399;
-    const radius = 330 + (i % 8) * 25;
-    const height = 22 + (i * 19 % 92);
-    const width = 12 + (i % 4) * 5;
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, width), mat(buildingMats[i % buildingMats.length], 0.72, 0.18));
-    building.position.set(x, height / 2 - 0.8, z);
-    scene.add(building);
-    if (i % 2 === 0) {
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 1.1, 0.35), windowMat);
-      sign.position.set(x, Math.min(height - 3, height * 0.68), z + width / 2 + 0.22);
-      scene.add(sign);
+  // Circuito Urbano: futuristic night city. Every building and prop is placed
+  // outside the existing guardrails; road, collision, grid and lap logic stay unchanged.
+  const towerMats = [
+    mat(0x10182d, 0.38, 0.42), mat(0x172440, 0.34, 0.48),
+    mat(0x20233f, 0.4, 0.38), mat(0x111b30, 0.3, 0.52)
+  ];
+  const cyan = new THREE.MeshBasicMaterial({ color: 0x19eaff });
+  const purple = new THREE.MeshBasicMaterial({ color: 0x9a4dff });
+  const magenta = new THREE.MeshBasicMaterial({ color: 0xff36c7 });
+  const windowMats = [cyan, purple, magenta];
+  const signMats = [
+    new THREE.MeshBasicMaterial({ color: 0x21dfff }),
+    new THREE.MeshBasicMaterial({ color: 0xff45c8 }),
+    new THREE.MeshBasicMaterial({ color: 0x9d71ff })
+  ];
+
+  // Three skyline layers give depth without crowding the road view.
+  for (let layer = 0; layer < 3; layer++) {
+    const count = layer === 0 ? 42 : 34;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + layer * 0.11;
+      const radius = (layer === 0 ? 305 : layer === 1 ? 410 : 535) + (i % 5) * 13;
+      const height = (layer === 0 ? 34 : layer === 1 ? 48 : 62) + ((i * 29) % (layer === 2 ? 125 : 100));
+      const width = (layer === 0 ? 13 : 18) + (i % 4) * 4;
+      const depth = width * (0.72 + (i % 3) * 0.16);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const tower = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        towerMats[(i + layer) % towerMats.length]
+      );
+      tower.position.set(x, height / 2 - 0.8, z);
+      tower.rotation.y = angle * 0.17;
+      scene.add(tower);
+
+      // Narrow emissive facade strips instead of expensive dynamic lights.
+      for (let band = 0; band < 2; band++) {
+        const strip = new THREE.Mesh(
+          new THREE.BoxGeometry(0.34, height * (0.5 + (band % 2) * 0.22), 0.12),
+          windowMats[(i + band + layer) % windowMats.length]
+        );
+        strip.position.set(x + (band ? width * 0.28 : -width * 0.28), height * 0.52, z + depth / 2 + 0.08);
+        scene.add(strip);
+      }
+      if (i % 3 === 0) {
+        const crown = new THREE.Mesh(
+          new THREE.BoxGeometry(width * 0.68, 0.28, depth * 0.7),
+          windowMats[(i + layer) % windowMats.length]
+        );
+        crown.position.set(x, height + 0.1, z);
+        scene.add(crown);
+      }
     }
   }
-  // Neon light strips around the outside of the circuit.
-  for (let i = 0; i < 30; i++) {
-    const angle = i * Math.PI * 2 / 30;
-    const radius = 300;
-    const light = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 5), new THREE.MeshBasicMaterial({
-      color: i % 2 ? 0xff3bc8 : 0x20dfff
-    }));
-    light.position.set(Math.cos(angle) * radius, 1.2, Math.sin(angle) * radius);
-    light.rotation.y = -angle;
-    scene.add(light);
+
+  // Fictional illuminated billboards and elevated walkways are landmarks
+  // outside the course, never crossing above the driveable surface.
+  const signTexts = ['NOVA', 'APEX', 'VOLT', 'NEON', 'GT-X', 'ORBIT'];
+  for (let i = 0; i < 12; i++) {
+    const angle = i * 2.399;
+    const radius = 285 + (i % 3) * 19;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    const group = new THREE.Group();
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(15, 5.2, 0.65), mat(0x080d1c, 0.35, 0.25));
+    panel.position.y = 13 + (i % 3) * 2;
+    group.add(panel);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(15.3, 0.18, 0.78), signMats[i % signMats.length]);
+    rim.position.y = panel.position.y + 2.65;
+    group.add(rim);
+    const bars = new THREE.Group();
+    for (let j = 0; j < 5; j++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.6 + (j % 3) * 0.4, 0.08), signMats[(i + j) % signMats.length]);
+      bar.position.set(-5.2 + j * 2.5, panel.position.y, 0.39);
+      bars.add(bar);
+    }
+    group.add(bars);
+    group.position.set(x, 0, z);
+    group.rotation.y = -angle + Math.PI / 2;
+    scene.add(group);
+
+    if (i % 2 === 0) {
+      const walkway = new THREE.Group();
+      walkway.position.set(x * 1.08, 0, z * 1.08);
+      walkway.rotation.y = -angle;
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(35, 0.7, 3.2), mat(0x343d58, 0.42, 0.5));
+      deck.position.y = 9;
+      walkway.add(deck);
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(35, 0.16, 0.12), signMats[i % signMats.length]);
+      edge.position.set(0, 9.45, 1.5);
+      walkway.add(edge);
+      scene.add(walkway);
+    }
   }
+
+  // Low neon guides follow the circuit beyond both guardrails.
+  // No point lights or post-processing are used, keeping ChromeOS rendering light.
+  for (let i = 0; i < N; i += 9) {
+    const p = path[i];
+    const s = side(i);
+    for (const sign of [-1, 1]) {
+      const point = p.clone().addScaledVector(s, sign * (ROAD_WIDTH / 2 + KERB_WIDTH + 2.2));
+      const marker = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, 0.22, 2.5),
+        (Math.floor(i / 9) + (sign > 0 ? 1 : 0)) % 3 === 0 ? magenta :
+          ((Math.floor(i / 9) + (sign > 0 ? 1 : 0)) % 3 === 1 ? cyan : purple)
+      );
+      marker.position.set(point.x, 0.22, point.z);
+      marker.rotation.y = Math.atan2(tangent(i).x, tangent(i).z);
+      scene.add(marker);
+    }
+  }
+
+  // Controlled, subtle sheen is a thin dark overlay, not a reflective shader.
+  const wetAsphalt = new THREE.MeshStandardMaterial({
+    color: 0x111827, roughness: 0.58, metalness: 0.22
+  });
+  ribbon(-ROAD_WIDTH / 2 + 0.18, ROAD_WIDTH / 2 - 0.18, 0.045, wetAsphalt);
 }
 if (selectedTrack === 'coast') addCoastalScenery();
 else if (selectedTrack === 'canyon') addCanyonScenery();
