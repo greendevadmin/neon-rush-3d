@@ -1259,7 +1259,7 @@ document.getElementById('escape-mode-button').addEventListener('click', () => {
 document.querySelectorAll('[data-track]').forEach(button => {
   button.addEventListener('click', () => {
     const chosen = button.dataset.track;
-    if (chosen !== selectedTrack || requestedMode !== 'classic') { location.search = '?track=' + chosen; return; }
+    if (chosen !== selectedTrack || requestedMode !== 'classic') { location.search = '?track=' + encodeURIComponent(chosen) + '&start=1'; return; }
     menuOpen = false;
     classicScreen.classList.add('hidden');
     settingsScreen.classList.add('hidden');
