@@ -44,8 +44,22 @@
   document.querySelectorAll('[data-track]').forEach(button => {
     button.addEventListener('click', () => {
       const chosen = button.dataset.track;
-      // Selecting a track should launch it immediately, even when changing tracks.
-      location.search = '?track=' + encodeURIComponent(chosen) + '&start=1';
+      const params = new URLSearchParams(location.search);
+      const currentTrack = params.get('track') || 'coast';
+      const nextUrl = new URL(location.href);
+      nextUrl.searchParams.set('track', chosen);
+      nextUrl.searchParams.set('start', '1');
+      nextUrl.searchParams.delete('mode');
+
+      if (chosen === currentTrack && params.get('mode') !== 'escape') {
+        // This circuit is already in memory. Avoid a reload and launch directly.
+        history.replaceState(null, '', nextUrl.pathname + nextUrl.search + nextUrl.hash);
+        window.dispatchEvent(new Event('overdrive:start-race'));
+        return;
+      }
+
+      // Different circuit: reload so game.js can build the correct track and scenery.
+      location.href = nextUrl.href;
     });
   });
 
