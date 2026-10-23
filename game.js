@@ -991,7 +991,7 @@ let speed = 0;
 let points = 0;
 let coinCount = 0;
 let paused = false;
-let menuOpen = true;
+let menuOpen = !queryParams.has('start') && requestedMode !== 'escape';
 let steeringSensitivity = 1;
 let invertSteering = false;
 const keys = {};
@@ -1229,7 +1229,7 @@ function launchEscape() {
 
 if (requestedMode === 'escape') {
   launchEscape();
-} else if (queryParams.has('track')) {
+} else if (queryParams.has('track') && !queryParams.has('start')) {
   mainMenu.classList.add('hidden');
   modeScreen.classList.add('hidden');
   classicScreen.classList.remove('hidden');
