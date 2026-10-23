@@ -392,25 +392,166 @@ function addCoastalScenery() {
   }
 }
 function addCanyonScenery() {
-  const sandstone = [0xb86f43, 0x9c5738, 0xd18a55, 0x80503a];
-  for (let i = 0; i < 64; i++) {
-    const angle = i * 2.399;
-    const radius = 340 + (i % 6) * 28;
-    const height = 28 + (i * 13 % 65);
-    const width = 17 + (i % 4) * 7;
-    const rock = new THREE.Mesh(
-      new THREE.CylinderGeometry(width * 0.72, width, height, 5, 1),
-      mat(sandstone[i % sandstone.length], 1)
-    );
-    rock.position.set(Math.cos(angle) * radius, height / 2 - 1, Math.sin(angle) * radius);
-    rock.rotation.y = angle * 0.6;
-    scene.add(rock);
-    if (i % 3 === 0) {
-      const cap = new THREE.Mesh(new THREE.BoxGeometry(width * 2.3, 5, width * 1.8), mat(sandstone[(i + 1) % sandstone.length], 1));
-      cap.position.set(rock.position.x, height + 1, rock.position.z);
-      cap.rotation.y = angle * 0.6;
+  // Canyon Rush environment: all scenery is decorative and placed well beyond
+  // the road edge. Track geometry, collision references, barriers and car
+  // positions are not modified by this function.
+  const sandstone = [
+    mat(0xb75b37, 1), mat(0x98452f, 1), mat(0xd17b49, 1),
+    mat(0x7d4030, 1), mat(0xe0a263, 1)
+  ];
+  const sand = mat(0xc99a5d, 1);
+  const darkSand = mat(0x9b6c43, 1);
+  const dryShrubMats = [mat(0x647044, 1), mat(0x8c844d, 1), mat(0x4e6540, 1)];
+  const bridgeConcrete = mat(0xaaa59a, 0.9);
+  const bridgeMetal = mat(0x5b6263, 0.65, 0.28);
+
+  // Canyon floor and layered desert mesas establish a wide, deep landscape.
+  const canyonFloor = new THREE.Mesh(new THREE.PlaneGeometry(1900, 1900), sand);
+  canyonFloor.rotation.x = -Math.PI / 2;
+  canyonFloor.position.set(0, -0.76, 0);
+  canyonFloor.receiveShadow = true;
+  scene.add(canyonFloor);
+
+  for (let layer = 0; layer < 3; layer++) {
+    for (let i = 0; i < 28; i++) {
+      const angle = i * 2.399 + layer * 0.18;
+      const radius = 330 + layer * 115 + (i % 5) * 22;
+      const height = 42 + (i * 17 % 80) + layer * 12;
+      const width = 25 + (i % 4) * 10;
+      const mesa = new THREE.Mesh(
+        new THREE.CylinderGeometry(width * 0.72, width, height, 5, 1),
+        sandstone[(i + layer) % sandstone.length]
+      );
+      mesa.position.set(Math.cos(angle) * radius, height / 2 - 1.5, Math.sin(angle) * radius);
+      mesa.rotation.y = angle * 0.55;
+      mesa.castShadow = true;
+      mesa.receiveShadow = true;
+      scene.add(mesa);
+
+      // Flat cap gives the rock formations a distinctive layered sandstone top.
+      const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(width * 2.1, 5 + (i % 3), width * 1.65),
+        sandstone[(i + layer + 2) % sandstone.length]
+      );
+      cap.position.set(mesa.position.x, height + 0.5, mesa.position.z);
+      cap.rotation.y = angle * 0.55;
+      cap.castShadow = true;
       scene.add(cap);
     }
+  }
+
+  // Jagged cliff walls on distant sides of the circuit.
+  for (let i = 0; i < 34; i++) {
+    const sideSign = i % 2 === 0 ? -1 : 1;
+    const x = sideSign * (300 + (i % 4) * 19);
+    const z = -430 + i * 26;
+    const height = 35 + (i * 11 % 58);
+    const cliff = new THREE.Mesh(
+      new THREE.ConeGeometry(30 + (i % 3) * 8, height, 6),
+      sandstone[i % sandstone.length]
+    );
+    cliff.position.set(x, height / 2 - 1, z);
+    cliff.rotation.z = sideSign * (0.08 + (i % 3) * 0.035);
+    cliff.castShadow = true;
+    scene.add(cliff);
+  }
+
+  // A bridge landmark across a distant ravine, safely away from the driving line.
+  function addCanyonBridge(x, z, length, metal = false) {
+    const bridge = new THREE.Group();
+    bridge.position.set(x, 0, z);
+    bridge.rotation.y = -0.12;
+    const deck = new THREE.Mesh(
+      new THREE.BoxGeometry(length, 1.8, 9),
+      metal ? bridgeMetal : bridgeConcrete
+    );
+    deck.position.y = 17;
+    deck.castShadow = true;
+    deck.receiveShadow = true;
+    bridge.add(deck);
+    const railMaterial = metal ? bridgeMetal : bridgeConcrete;
+    for (const railZ of [-4.2, 4.2]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(length, 0.8, 0.35), railMaterial);
+      rail.position.set(0, 18.2, railZ);
+      bridge.add(rail);
+    }
+    const supports = Math.max(3, Math.floor(length / 24));
+    for (let i = 0; i < supports; i++) {
+      const pier = new THREE.Mesh(
+        new THREE.BoxGeometry(2.8, 16, 3.5),
+        bridgeConcrete
+      );
+      pier.position.set(-length / 2 + 8 + i * (length - 16) / Math.max(1, supports - 1), 8, 0);
+      pier.castShadow = true;
+      bridge.add(pier);
+    }
+    scene.add(bridge);
+  }
+  addCanyonBridge(390, -110, 112, false);
+  addCanyonBridge(-405, 175, 136, true);
+
+  // Small stones and dry shrubs are scattered beyond the guardrails only.
+  for (let i = 0; i < N; i += 19) {
+    const p = path[i];
+    const s = side(i);
+    const sign = Math.floor(i / 19) % 2 === 0 ? 1 : -1;
+    const offset = ROAD_WIDTH / 2 + KERB_WIDTH + 10 + (i % 5) * 2.2;
+    const spot = p.clone().addScaledVector(s, sign * offset);
+    const pebble = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.7 + (i % 4) * 0.38, 0),
+      sandstone[i % sandstone.length]
+    );
+    pebble.position.set(spot.x, -0.05, spot.z);
+    pebble.rotation.set(i * 0.1, i * 0.23, i * 0.07);
+    pebble.castShadow = true;
+    scene.add(pebble);
+
+    if (i % 3 === 0) {
+      const shrub = new THREE.Group();
+      shrub.position.set(spot.x + sign * 4, 0, spot.z + 2);
+      for (let j = 0; j < 3; j++) {
+        const branch = new THREE.Mesh(
+          new THREE.ConeGeometry(0.65 + j * 0.12, 1.7, 5),
+          dryShrubMats[(i + j) % dryShrubMats.length]
+        );
+        branch.position.set((j - 1) * 0.48, 0.65, (j % 2) * 0.35);
+        branch.rotation.z = (j - 1) * 0.22;
+        shrub.add(branch);
+      }
+      scene.add(shrub);
+    }
+  }
+
+  // A few isolated boulders add scale without entering the track corridor.
+  for (let i = 0; i < 18; i++) {
+    const angle = i * 2.399;
+    const radius = 255 + (i % 4) * 13;
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(9 + (i % 5) * 3, 1),
+      sandstone[(i + 1) % sandstone.length]
+    );
+    rock.position.set(Math.cos(angle) * radius, 3 + (i % 3), Math.sin(angle) * radius);
+    rock.scale.set(1.35, 0.8 + (i % 2) * 0.35, 1.1);
+    rock.rotation.set(0.12 * i, angle, 0.08 * i);
+    rock.castShadow = true;
+    scene.add(rock);
+  }
+
+  // Light dust motes on the distant horizon; subtle and purely visual.
+  const dustMaterial = new THREE.MeshBasicMaterial({
+    color: 0xf4c58c, transparent: true, opacity: 0.22, depthWrite: false
+  });
+  for (let i = 0; i < 90; i++) {
+    const dust = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28 + (i % 4) * 0.12, 5, 4),
+      dustMaterial
+    );
+    dust.position.set(
+      Math.sin(i * 2.31) * (360 + (i % 5) * 24),
+      5 + (i % 8) * 2.8,
+      Math.cos(i * 1.71) * (350 + (i % 7) * 19)
+    );
+    scene.add(dust);
   }
 }
 function addUrbanScenery() {
