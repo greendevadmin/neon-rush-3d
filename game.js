@@ -947,6 +947,16 @@ document.getElementById('invert-steering').addEventListener('change', event => {
 });
 
 
+// A direct start query is used by the standalone menu fallback on touch devices.
+if (queryParams.has('start') && requestedMode !== 'escape') {
+  menuOpen = false;
+  mainMenu.classList.add('hidden');
+  modeScreen.classList.add('hidden');
+  classicScreen.classList.add('hidden');
+  settingsScreen.classList.add('hidden');
+  countdown = 3.5;
+  document.getElementById('start-countdown').classList.add('visible');
+}
 const clock = new THREE.Clock();
 function circularDifference(a, b) {
   let d = wrap(a) - wrap(b);
