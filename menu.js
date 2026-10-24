@@ -76,6 +76,19 @@
   let navCooldown = 0;
   let gamepadWasConnected = false;
 
+  byId('controller-connect-button')?.addEventListener('click', () => {
+    const pads = navigator.getGamepads ? [...navigator.getGamepads()] : [];
+    const connected = pads.find(p => p && p.connected);
+    const status = byId('settings-controller-status');
+    if (connected) {
+      gamepadWasConnected = true;
+      document.body.classList.add('controller-connected');
+      if (status) status.textContent = 'Conectado: ' + (connected.id || 'controle detectado') + '. Os botões de toque foram ocultados.';
+    } else if (status) {
+      status.textContent = 'Nenhum controle detectado. Conecte-o nas configurações Bluetooth/USB do aparelho e pressione um botão.';
+    }
+  });
+
   function visibleMenuButtons() {
     const finish = byId('finish-overlay');
     const screen = finish?.classList.contains('visible')
@@ -115,8 +128,8 @@
       if (!gamepadWasConnected) {
         gamepadWasConnected = true;
         document.body.classList.add('controller-connected');
-        const status = byId('controller-status');
-        if (status) status.textContent = 'Controle conectado · menu: direcional + A para confirmar · B para voltar';
+        const status = byId('settings-controller-status');
+        if (status) status.textContent = 'Controle conectado. Use o direcional e A para selecionar nos menus.';
         if (document.querySelector('.menu-screen:not(.hidden)') || byId('finish-overlay')?.classList.contains('visible')) {
           const first = visibleMenuButtons()[0];
           if (first) first.focus();
@@ -148,8 +161,8 @@
       if (gamepadWasConnected) {
         gamepadWasConnected = false;
         document.body.classList.remove('controller-connected');
-        const status = byId('controller-status');
-        if (status) status.textContent = 'Controle desconectado · conecte e pressione um botão';
+        const status = byId('settings-controller-status');
+        if (status) status.textContent = 'Não detectado. Conecte o controle ao aparelho e pressione um botão.';
       }
       previousPadButtons = [];
     }
