@@ -184,7 +184,7 @@
         loading.textContent = 'NÃO FOI POSSÍVEL INICIAR O JOGO\n\n' + message + '\n\nRecarregue a página. Se continuar, envie esta mensagem para corrigirmos.';
       }
       window.addEventListener('error', event => {
-        const message = event.message || (event.target && event.target.src ? 'Falha ao carregar: ' + event.target.src : 'Erro ao executar JavaScript.');
+        const message = (event.message || (event.target && event.target.src ? 'Falha ao carregar: ' + event.target.src : 'Erro ao executar JavaScript.')) + (event.error && event.error.stack ? '\\n\\n' + event.error.stack : '');
         report(message);
       });
       window.addEventListener('unhandledrejection', event => {
