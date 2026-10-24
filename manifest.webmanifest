@@ -1,0 +1,14 @@
+{
+  "id": "./",
+  "name": "Overdrive",
+  "short_name": "Overdrive",
+  "description": "Jogo de corrida 3D em modo manual.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#061426",
+  "theme_color": "#061426",
+  "icons": [{"src":"./assets/icons/overdrive.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
