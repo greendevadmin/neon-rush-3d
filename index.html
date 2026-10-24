@@ -8,7 +8,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/icons/overdrive.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./assets/icons/overdrive.svg">
-  <link rel="stylesheet" href="style.css?v=gamepad-touch-13">
+  <link rel="stylesheet" href="style.css?v=controller-settings-14">
 </head>
 <body>
   <div id="loading" aria-live="polite">
@@ -77,7 +77,6 @@
     </div>
   </div>
   <div id="hint">WASD / SETAS OU CONTROLE USB PARA DIRIGIR</div>
-  <div id="controller-status" role="status" aria-live="polite">Controle não detectado · conecte e pressione um botão</div>
   <div id="pause-overlay">
     <div class="pause-card">
       <span class="eyebrow">OVERDRIVE</span>
@@ -181,6 +180,13 @@
         <span><strong>Inverter direção</strong><small>Troca esquerda e direita.</small></span>
         <input id="invert-steering" type="checkbox">
       </label>
+      <div class="controller-setting">
+        <div class="controller-setting-copy">
+          <strong>Controle USB / Bluetooth</strong>
+          <small id="settings-controller-status" role="status" aria-live="polite">Não detectado. Conecte o controle ao aparelho e pressione um botão.</small>
+        </div>
+        <button id="controller-connect-button" class="menu-secondary controller-connect-button" type="button">VERIFICAR CONTROLE</button>
+      </div>
       <div class="settings-controls"><strong>CONTROLES</strong><p><kbd>W</kbd> / <kbd>↑</kbd> Acelerar <span>·</span> <kbd>S</kbd> / <kbd>↓</kbd> Frear</p><p><kbd>A</kbd> / <kbd>←</kbd> e <kbd>D</kbd> / <kbd>→</kbd> Direção</p><p><kbd>Shift</kbd> / <kbd>Espaço</kbd> Usar nitro; cristais azuis recarregam a barra.</p><p><kbd>Esc</kbd> Pausar</p></div>
       <button id="close-settings" class="menu-primary" type="button">SALVAR E VOLTAR</button>
     </div>
@@ -209,8 +215,8 @@
       });
     })();
   </script>
-  <script src="menu.js?v=gamepad-touch-13"></script>
-  <script type="module" src="game.js?v=gamepad-touch-13"></script>
+  <script src="menu.js?v=controller-settings-14"></script>
+  <script type="module" src="game.js?v=controller-settings-14"></script>
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       window.addEventListener("load", () => {
