@@ -345,3 +345,20 @@ canvas { pointer-events: none; }
   .exit-button { min-height: 34px; }
   .menu-footer { bottom: 5px; }
 }
+
+
+/* Result-screen actions: three clear choices, also reachable by gamepad focus. */
+.finish-actions{display:flex;flex-direction:column;gap:2px;margin-top:12px}
+.finish-actions button{width:100%;min-height:44px;margin-top:8px}
+.finish-actions .finish-secondary{border:1px solid #2a6985;background:#0a2034;color:#bcecff}
+.finish-actions .finish-secondary:hover{background:#103651;border-color:#19d9ff}
+.finish-exit-message{min-height:0;margin:6px 0 0;font-size:11px!important;color:#9ec4d5!important}
+.finish-exit-message:empty{display:none}
+.finish-card{max-height:calc(100dvh - 24px);overflow-y:auto}
+@media(max-width:640px){
+  .finish-card{width:min(92vw,380px);padding:18px 16px;border-radius:14px}
+  .finish-card h1{font-size:23px;margin:8px 0}
+  #finish-position{font-size:27px;margin:7px 0}
+  #finish-stats{font-size:12px;line-height:1.5}
+  .finish-actions button{min-height:40px;padding:10px 12px;font-size:11px}
+}
