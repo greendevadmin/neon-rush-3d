@@ -63,7 +63,8 @@
   // D-pad or left stick moves focus; A / Cross confirms; B / Circle goes back.
   const focusStyle = document.createElement('style');
   focusStyle.textContent = `
-    .menu-screen button:focus-visible, .menu-screen button.gamepad-focused {
+     .menu-screen button:focus-visible, .menu-screen button.gamepad-focused,
+    #finish-overlay button:focus-visible, #finish-overlay button.gamepad-focused {
       outline: 3px solid #19d9ff !important;
       outline-offset: 4px;
       box-shadow: 0 0 22px rgba(25,217,255,.65) !important;
@@ -76,7 +77,10 @@
   let gamepadWasConnected = false;
 
   function visibleMenuButtons() {
-    const screen = document.querySelector('.menu-screen:not(.hidden)');
+    const finish = byId('finish-overlay');
+    const screen = finish?.classList.contains('visible')
+      ? finish
+      : document.querySelector('.menu-screen:not(.hidden)');
     if (!screen) return [];
     return [...screen.querySelectorAll('button:not(:disabled), input:not(:disabled)')]
       .filter(el => {
@@ -100,7 +104,7 @@
   function backFromMenu() {
     const screen = document.querySelector('.menu-screen:not(.hidden)');
     if (!screen) return;
-    const back = screen.querySelector('#close-settings, #back-to-modes, #classic-back-to-menu, #back-to-menu');
+    const back = screen.querySelector('#close-settings, #back-to-modes, #classic-back-to-menu, #back-to-menu, #finish-menu-button');
     if (back) back.click();
   }
 
@@ -112,7 +116,7 @@
         gamepadWasConnected = true;
         const status = byId('controller-status');
         if (status) status.textContent = 'Controle conectado · menu: direcional + A para confirmar · B para voltar';
-        if (document.querySelector('.menu-screen:not(.hidden)')) {
+        if (document.querySelector('.menu-screen:not(.hidden)') || byId('finish-overlay')?.classList.contains('visible')) {
           const first = visibleMenuButtons()[0];
           if (first) first.focus();
         }
