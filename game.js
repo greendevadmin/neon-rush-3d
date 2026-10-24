@@ -1,6 +1,15 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
 const queryParams = new URLSearchParams(location.search);
+
+// Hide the menu immediately on a direct race launch, before the 3D scene is built.
+// This prevents the menu from remaining visible if scene initialization takes time.
+if (new URLSearchParams(location.search).has('start')) {
+  document.getElementById('main-menu')?.classList.add('hidden');
+  document.getElementById('mode-screen')?.classList.add('hidden');
+  document.getElementById('classic-screen')?.classList.add('hidden');
+  document.getElementById('settings-screen')?.classList.add('hidden');
+}
 const requestedMode = queryParams.get('mode') === 'escape' ? 'escape' : 'classic';
 const requestedTrack = queryParams.get('track') || 'coast';
 const trackNames = { coast: 'Costa Dourada', canyon: 'Canyon Rush', neon: 'Circuito Urbano' };
