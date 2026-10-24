@@ -418,3 +418,149 @@ body.controller-connected #touch-controls { display: none !important; }
 .controller-setting-copy strong { font-size: 13px; color: #f4fbff; }
 .controller-setting-copy small { font-size: 11px; line-height: 1.45; color: #a9c5d7; }
 .controller-connect-button { min-height: 40px; width: 100%; border-color: #19d9ff; }
+
+
+/* OVERDRIVE visual system: keep every menu consistent with the main screen. */
+:root {
+  --od-cyan: #04d9ff;
+  --od-blue: #049fe8;
+  --od-panel: rgba(3, 17, 34, .96);
+  --od-border: rgba(35, 207, 255, .72);
+}
+.menu-screen .menu-backdrop {
+  background:
+    radial-gradient(ellipse at 78% 18%, rgba(0, 185, 255, .16), transparent 38%),
+    linear-gradient(115deg, rgba(2, 10, 23, .98), rgba(3, 22, 43, .94) 52%, rgba(0, 105, 151, .45));
+  backdrop-filter: blur(8px);
+}
+.settings-card,
+.mode-page-copy,
+.mode-art,
+.pause-card,
+.finish-card {
+  border: 1px solid var(--od-border);
+  background: linear-gradient(145deg, rgba(5, 23, 43, .98), rgba(3, 13, 28, .98));
+  box-shadow: 0 22px 75px rgba(0,0,0,.52), inset 0 1px rgba(255,255,255,.05), 0 0 26px rgba(0,191,255,.08);
+}
+.settings-card {
+  border-radius: 18px;
+}
+.settings-top h2,
+.pause-card h1,
+.finish-card h1,
+.mode-page-copy h2 {
+  color: #f5fbff;
+  font-style: italic;
+  letter-spacing: -.5px;
+}
+.settings-top h2 { text-transform: uppercase; }
+.settings-symbol { color: var(--od-cyan); }
+.setting-row,
+.controller-setting {
+  border-color: rgba(35,207,255,.2);
+}
+.setting-row strong,
+.controller-setting-copy strong,
+.settings-controls > strong { color: #eaf9ff; }
+.setting-row small,
+.controller-setting-copy small,
+.settings-controls p { color: #a5c3d5; }
+.sensitivity-control input { accent-color: var(--od-cyan); }
+.setting-toggle input { accent-color: var(--od-cyan); }
+.settings-controls {
+  border: 1px solid rgba(35,207,255,.2);
+  border-radius: 10px;
+  background: rgba(0,8,20,.34);
+}
+.settings-controls kbd {
+  border: 1px solid rgba(35,207,255,.45);
+  border-radius: 4px;
+  background: #071c30;
+  color: #8deaff;
+}
+.menu-screen .back-button {
+  border: 1px solid #3bbdf6;
+  border-radius: 8px;
+  background: rgba(2,20,40,.82);
+  color: #81cafa;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: background .18s, border-color .18s;
+}
+.menu-screen .back-button:hover,
+.menu-screen .back-button:focus-visible {
+  border-color: #1ee6ff;
+  background: rgba(3,66,100,.8);
+  outline: none;
+}
+.classic-mode-card {
+  border: 1px solid rgba(35,207,255,.62);
+  border-radius: 12px 8px 12px 8px;
+  background: linear-gradient(110deg, rgba(3,38,63,.98), rgba(3,15,30,.98));
+  box-shadow: inset 0 1px rgba(255,255,255,.04), 0 0 18px rgba(0,191,255,.08);
+}
+.classic-mode-card:hover,
+.classic-mode-card:focus-visible {
+  border-color: #73edff;
+  box-shadow: 0 0 25px rgba(0,191,255,.2), inset 0 0 14px rgba(255,255,255,.025);
+  outline: none;
+}
+.classic-label,
+.classic-play { color: var(--od-cyan); }
+.classic-description,
+.track-hint { color: #a5c3d5; }
+.mode-page-copy h2 span { color: var(--od-cyan); }
+.mode-art {
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pause-card,
+.finish-card {
+  width: min(90vw, 470px);
+  border-radius: 18px;
+  text-align: left;
+  padding: clamp(22px, 4vw, 36px);
+}
+.pause-card .eyebrow,
+.finish-card .eyebrow { display: block; }
+.pause-card h1,
+.finish-card h1 { margin: 12px 0; font-size: clamp(25px, 3vw, 34px); }
+.pause-card p,
+.finish-card p { color: #a5c3d5; }
+.pause-card button,
+.finish-actions button {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 20px;
+  border: 2px solid #66efff;
+  border-radius: 10px 7px 10px 7px;
+  background: linear-gradient(105deg, #04b9f4, #04e0ff);
+  color: #f5fdff;
+  font-size: 14px;
+  font-weight: 1000;
+  font-style: italic;
+  letter-spacing: 1px;
+  text-align: left;
+  box-shadow: 0 0 20px rgba(0,191,255,.18);
+}
+.finish-actions .finish-secondary {
+  border: 1px solid #3bbdf6;
+  background: rgba(2,20,40,.82);
+  color: #81cafa;
+}
+.pause-card button:hover,
+.finish-actions button:hover,
+.pause-card button:focus-visible,
+.finish-actions button:focus-visible {
+  border-color: #a4f7ff;
+  filter: brightness(1.12);
+  outline: none;
+}
+#finish-position { color: var(--od-cyan); font-style: italic; }
+@media (max-width: 640px) {
+  .settings-card { border-radius: 14px; }
+  .pause-card, .finish-card { width: min(92vw, 420px); padding: 20px 17px; border-radius: 14px; }
+  .pause-card button, .finish-actions button { min-height: 45px; font-size: 12px; }
+  .mode-page-copy { padding: 18px; border-radius: 14px; }
+}
