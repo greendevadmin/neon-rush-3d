@@ -114,6 +114,7 @@
     if (pad) {
       if (!gamepadWasConnected) {
         gamepadWasConnected = true;
+        document.body.classList.add('controller-connected');
         const status = byId('controller-status');
         if (status) status.textContent = 'Controle conectado · menu: direcional + A para confirmar · B para voltar';
         if (document.querySelector('.menu-screen:not(.hidden)') || byId('finish-overlay')?.classList.contains('visible')) {
@@ -146,6 +147,7 @@
     } else {
       if (gamepadWasConnected) {
         gamepadWasConnected = false;
+        document.body.classList.remove('controller-connected');
         const status = byId('controller-status');
         if (status) status.textContent = 'Controle desconectado · conecte e pressione um botão';
       }
