@@ -251,3 +251,97 @@ canvas { pointer-events: none; }
   -webkit-tap-highlight-color: transparent;
 }
 .menu-screen button { position: relative; }
+
+
+/* Mobile HUD refinement: smaller overlays keep more of the circuit visible. */
+@media (max-width: 640px) {
+  .top-left { top: 7px; left: 7px; width: 108px; gap: 4px; }
+  .stat-panel { min-height: 39px; padding: 5px 7px; gap: 1px; border-radius: 8px; }
+  .eyebrow { font-size: 8px; letter-spacing: 1px; }
+  .stat-panel strong { font-size: 17px; gap: 5px; }
+  .coin-icon { width: 15px; height: 15px; border-width: 2px; font-size: 9px; }
+  .position-panel { top: 7px; right: 7px; width: 82px; padding: 5px 7px; border-radius: 8px; }
+  .position-panel strong { font-size: 20px; }
+  .race-panel { top: 7px; gap: 8px; min-width: 0; padding: 5px 8px; border-radius: 8px; }
+  .race-stat strong { font-size: 15px; }
+  .time-stat { padding-left: 8px; }
+  .time-stat strong { font-size: 12px; }
+  #manual-mode { top: 48px; padding: 4px 6px; font-size: 7px; letter-spacing: .5px; }
+  .map-panel { left: 7px; bottom: 104px; width: 82px; height: 82px; padding: 3px; border-width: 1px; }
+  #pause-button { left: 7px; bottom: 194px; width: 34px; height: 34px; border-radius: 8px; font-size: 16px; }
+  .speed-panel { right: 7px; bottom: 104px; width: 92px; gap: 4px; }
+  .speed-dial { height: 66px; border-width: 2px; border-radius: 70px 70px 14px 14px; }
+  .speed-dial:before { inset: 5px 5px -15px; border-width: 3px; }
+  .speed-top { font-size: 7px; margin-top: 4px; }
+  .speed-number { font-size: 25px; }
+  .speed-scale { font-size: 5px; margin-top: 2px; }
+  .nitro-panel { height: 29px; padding: 3px 5px; gap: 4px; border-width: 1px; border-radius: 7px; }
+  .bolt { font-size: 19px; }
+  .nitro-content { gap: 3px; }
+  .nitro-content .eyebrow { font-size: 7px; letter-spacing: .5px; }
+  #nitro-percent { font-size: 7px; margin-left: 2px; }
+  .nitro-track { height: 6px; }
+  #touch-controls { inset: auto 7px 7px 7px; gap: 6px; }
+  .touch-steering, .touch-pedals { gap: 5px; }
+  .touch-steering button { width: 38px; height: 39px; font-size: 18px; border-radius: 8px; }
+  .touch-pedals { width: 78px; }
+  .touch-pedals button { height: 27px; font-size: 8px; border-radius: 7px; }
+  .touch-pedals .nitro-touch { height: 23px; font-size: 8px !important; }
+  #hint { bottom: 83px; max-width: calc(100vw - 110px); font-size: 7px; padding: 4px 6px; letter-spacing: 0; }
+  #controller-status { bottom: 48px; max-width: 78vw; padding: 4px 7px; font-size: 7px; }
+}
+
+/* Keep the mobile menu cinematic and closer to the desktop composition. */
+@media (max-width: 760px) {
+  .menu-screen { place-items: center start; padding: 22px 18px 34px; }
+  .menu-backdrop {
+    background:
+      linear-gradient(90deg, rgba(2,10,23,.97) 0%, rgba(2,12,27,.86) 54%, rgba(2,13,29,.42) 100%),
+      linear-gradient(0deg, rgba(1,7,18,.82), transparent 58%),
+      url('assets/overdrive-menu.png') 61% center / cover no-repeat,
+      linear-gradient(135deg,#09253f,#087aa3 55%,#ff8748);
+  }
+  .menu-content { align-self: center; width: min(100%, 390px); max-width: 390px; margin: 0; padding: 0; text-align: left; }
+  .menu-kicker { font-size: 8px; letter-spacing: 2px; }
+  .game-logo { margin: 13px 0; font-size: clamp(42px, 12vw, 66px); line-height: .9; letter-spacing: -2px; }
+  .menu-subtitle { margin: 17px 0 19px; font-size: 10px; letter-spacing: 2px; }
+  .menu-actions { width: min(100%, 320px); gap: 8px; }
+  .menu-primary, .menu-secondary { min-height: 48px; padding: 0 14px; gap: 10px; font-size: 13px; border-width: 1px; }
+  .menu-primary .button-symbol, .menu-secondary .button-symbol { width: 28px; font-size: 22px; }
+  .exit-button { min-height: 43px; }
+  .menu-content .mode-heading { max-width: 320px; margin-top: 14px; font-size: 8px; letter-spacing: 1px; }
+  .menu-content .future-modes { max-width: 320px; margin-top: 7px; font-size: 7px; letter-spacing: 1px; }
+  .menu-footer { left: 18px; bottom: 10px; font-size: 7px; letter-spacing: 1.5px; }
+  .settings-card { width: min(100%, 440px); max-height: calc(100dvh - 24px); padding: 18px 15px; }
+  .settings-top h2 { font-size: 23px; }
+  .setting-row { padding: 12px 0; }
+  .setting-row strong { font-size: 12px; }
+  .setting-row small { font-size: 9px; }
+  .settings-controls { margin: 6px 0 15px; padding: 10px; }
+  .settings-controls p { font-size: 9px; }
+}
+
+/* Wide phones in landscape: move the HUD to the edges and preserve track visibility. */
+@media (max-width: 900px) and (orientation: landscape) {
+  .top-left { width: 100px; }
+  .map-panel { width: 68px; height: 68px; bottom: 72px; }
+  #pause-button { bottom: 145px; width: 31px; height: 31px; }
+  .speed-panel { width: 82px; bottom: 72px; }
+  .speed-dial { height: 55px; }
+  .nitro-panel { height: 25px; }
+  #touch-controls { bottom: 5px; }
+  .touch-steering button { width: 35px; height: 34px; }
+  .touch-pedals { width: 70px; }
+  .touch-pedals button { height: 23px; }
+  #hint { bottom: 59px; }
+  #controller-status { bottom: 35px; }
+  #manual-mode { top: 40px; }
+  .menu-screen { padding: 12px 18px; }
+  .menu-content { width: min(48vw, 360px); }
+  .game-logo { font-size: clamp(38px, 7vw, 58px); }
+  .menu-subtitle { margin: 10px 0 12px; }
+  .menu-actions { gap: 5px; }
+  .menu-primary, .menu-secondary { min-height: 38px; font-size: 11px; }
+  .exit-button { min-height: 34px; }
+  .menu-footer { bottom: 5px; }
+}
