@@ -403,3 +403,18 @@ canvas { pointer-events: none; }
 
 /* When a gamepad is detected, keep the touch pedals and steering buttons out of the way. */
 body.controller-connected #touch-controls { display: none !important; }
+
+
+/* Controller connection is managed from Settings, not shown as a racing HUD banner. */
+#controller-status { display: none !important; }
+.controller-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid rgba(58, 190, 225, .2);
+}
+.controller-setting-copy { display: flex; flex-direction: column; gap: 5px; }
+.controller-setting-copy strong { font-size: 13px; color: #f4fbff; }
+.controller-setting-copy small { font-size: 11px; line-height: 1.45; color: #a9c5d7; }
+.controller-connect-button { min-height: 40px; width: 100%; border-color: #19d9ff; }
