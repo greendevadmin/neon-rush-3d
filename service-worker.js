@@ -1,4 +1,4 @@
-const CACHE_NAME = "overdrive-pwa-v2";
+const CACHE_NAME = "overdrive-pwa-v3";
 const APP_SHELL = ["./", "./index.html", "./style.css", "./menu.js", "./game.js", "./manifest.webmanifest", "./assets/icons/overdrive.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL).catch(() => cache.add("./"))).then(() => self.skipWaiting()));
