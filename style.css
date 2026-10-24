@@ -364,38 +364,38 @@ canvas { pointer-events: none; }
 }
 
 
-/* Touch devices in landscape: keep the HUD proportional even when the browser
-   reports a desktop-width viewport (common on Android tablets / desktop mode). */
-@media (orientation: landscape) and (max-height: 800px) and (pointer: coarse) {
-  .top-left { top: 4.5vh; left: 2.2vw; width: clamp(108px, 12vw, 170px); gap: 1.2vh; }
-  .stat-panel { min-height: clamp(42px, 10vh, 66px); padding: 1.2vh 1vw; border-radius: 12px; }
-  .eyebrow { font-size: clamp(9px, 1.15vw, 13px); letter-spacing: 1px; }
-  .stat-panel strong { font-size: clamp(19px, 2.6vw, 29px); gap: 6px; }
-  .coin-icon { width: clamp(17px, 1.8vw, 23px); height: clamp(17px, 1.8vw, 23px); font-size: 12px; }
-  .position-panel { top: 4.5vh; right: 2.2vw; width: clamp(105px, 13vw, 165px); padding: 1.2vh 1vw; border-radius: 12px; }
-  .position-panel strong { font-size: clamp(25px, 3vw, 36px); }
-  .race-panel { top: 4.5vh; gap: 1.8vw; padding: 1.2vh 1.4vw; min-width: 0; border-radius: 12px; }
-  .race-stat strong { font-size: clamp(17px, 2vw, 25px); }
-  .time-stat { padding-left: 1.3vw; }
-  .time-stat strong { font-size: clamp(14px, 1.6vw, 20px); }
-  #manual-mode { top: 16vh; font-size: clamp(8px, .85vw, 11px); padding: 5px 9px; }
-  .map-panel { left: 3vw; bottom: 18vh; width: clamp(78px, 9vw, 125px); height: clamp(78px, 9vw, 125px); padding: 4px; }
-  #pause-button { left: 3.2vw; bottom: calc(18vh + clamp(88px, 10vw, 137px)); width: clamp(36px, 4vw, 54px); height: clamp(36px, 4vw, 54px); font-size: clamp(18px, 2vw, 26px); }
-  .speed-panel { right: 3vw; bottom: 18vh; width: clamp(100px, 11vw, 150px); gap: 6px; }
-  .speed-dial { height: clamp(68px, 13vh, 105px); border-width: 3px; }
-  .speed-number { font-size: clamp(27px, 3.2vw, 40px); }
-  .speed-top { font-size: clamp(8px, .9vw, 12px); margin-top: 5px; }
-  .speed-scale { font-size: 6px; margin-top: 3px; }
-  .nitro-panel { height: clamp(30px, 6vh, 45px); padding: 4px 7px; gap: 6px; }
-  .bolt { font-size: clamp(22px, 2.5vw, 32px); }
-  .nitro-content .eyebrow { font-size: clamp(8px, .9vw, 11px); }
-  .nitro-track { height: 7px; }
-  #touch-controls { inset: auto 2.5vw 2vh 2.5vw; gap: 8px; }
-  .touch-steering, .touch-pedals { gap: 6px; }
-  .touch-steering button { width: clamp(40px, 4.2vw, 58px); height: clamp(39px, 8vh, 55px); font-size: clamp(18px, 2vw, 25px); }
-  .touch-pedals { width: clamp(78px, 8vw, 108px); }
-  .touch-pedals button { height: clamp(27px, 5vh, 36px); font-size: clamp(8px, .8vw, 10px); }
-  .touch-pedals .nitro-touch { height: clamp(23px, 4vh, 30px); }
-  #hint { bottom: 2vh; max-width: 46vw; font-size: clamp(8px, .8vw, 11px); padding: 6px 10px; white-space: normal; }
-  #controller-status { bottom: 8vh; max-width: 48vw; font-size: clamp(8px, .8vw, 11px); }
+/* Compact landscape HUD: use viewport height, not desktop-width breakpoints.
+   This covers Android browsers that expose a wide CSS viewport in landscape. */
+@media (orientation: landscape) and (max-height: 800px) and (min-aspect-ratio: 16/10) {
+  .top-left { top: 4vh; left: 2vw; width: clamp(100px, 18vh, 145px); gap: 1vh; }
+  .stat-panel { min-height: clamp(40px, 9vh, 62px); padding: 1vh 1.2vh; border-radius: 10px; }
+  .eyebrow { font-size: clamp(9px, 1.45vh, 12px); letter-spacing: 1px; }
+  .stat-panel strong { font-size: clamp(18px, 3.6vh, 27px); gap: 6px; }
+  .coin-icon { width: clamp(16px, 2.7vh, 21px); height: clamp(16px, 2.7vh, 21px); font-size: 11px; }
+  .position-panel { top: 4vh; right: 2vw; width: clamp(100px, 19vh, 155px); padding: 1vh 1.2vh; border-radius: 10px; }
+  .position-panel strong { font-size: clamp(24px, 5vh, 34px); }
+  .race-panel { top: 4vh; gap: 2vh; padding: 1vh 1.5vh; min-width: 0; border-radius: 10px; }
+  .race-stat strong { font-size: clamp(16px, 3.5vh, 24px); }
+  .time-stat { padding-left: 1.5vh; }
+  .time-stat strong { font-size: clamp(13px, 2.8vh, 19px); }
+  #manual-mode { top: 15vh; font-size: clamp(8px, 1.4vh, 10px); padding: 5px 8px; }
+  .map-panel { left: 2.5vw; bottom: 17vh; width: clamp(72px, 17vh, 118px); height: clamp(72px, 17vh, 118px); padding: 3px; }
+  #pause-button { left: 2.8vw; bottom: calc(17vh + clamp(78px, 18vh, 125px)); width: clamp(34px, 6vh, 46px); height: clamp(34px, 6vh, 46px); font-size: clamp(17px, 3.5vh, 23px); }
+  .speed-panel { right: 2.5vw; bottom: 17vh; width: clamp(88px, 19vh, 132px); gap: 5px; }
+  .speed-dial { height: clamp(60px, 15vh, 98px); border-width: 3px; }
+  .speed-number { font-size: clamp(26px, 5.5vh, 38px); }
+  .speed-top { font-size: clamp(8px, 1.5vh, 11px); margin-top: 4px; }
+  .speed-scale { font-size: 6px; margin-top: 2px; }
+  .nitro-panel { height: clamp(27px, 6vh, 40px); padding: 3px 6px; gap: 5px; }
+  .bolt { font-size: clamp(21px, 4.5vh, 30px); }
+  .nitro-content .eyebrow { font-size: clamp(8px, 1.5vh, 10px); }
+  .nitro-track { height: 6px; }
+  #touch-controls { display: flex; inset: auto 2vw 2vh 2vw; gap: 7px; }
+  .touch-steering, .touch-pedals { gap: 5px; }
+  .touch-steering button { width: clamp(36px, 7vh, 52px); height: clamp(35px, 7.5vh, 52px); font-size: clamp(17px, 3.5vh, 23px); }
+  .touch-pedals { width: clamp(72px, 13vh, 96px); }
+  .touch-pedals button { height: clamp(25px, 5vh, 34px); font-size: clamp(8px, 1.35vh, 10px); }
+  .touch-pedals .nitro-touch { height: clamp(22px, 4vh, 28px); }
+  #hint { bottom: 2vh; max-width: 45vw; font-size: clamp(8px, 1.3vh, 10px); padding: 5px 8px; white-space: normal; }
+  #controller-status { bottom: 8vh; max-width: 48vw; font-size: clamp(8px, 1.3vh, 10px); }
 }
