@@ -99,14 +99,16 @@ function wrap(s) {
   return escapeMode ? THREE.MathUtils.clamp(s, 0, N - 1.001) : (s % N + N) % N;
 }
 function tangent(i) {
+  // Normalize every lookup to an integer path sample. Fractional progress values
+  // are valid for the car, but cannot be used directly as array indices.
+  const index = THREE.MathUtils.clamp(Math.round(i), 0, N - 1);
   if (escapeMode) {
-    const index = THREE.MathUtils.clamp(Math.round(i), 0, N - 1);
     const before = path[Math.max(0, index - 1)];
     const after = path[Math.min(N - 1, index + 1)];
     return after.clone().sub(before).normalize();
   }
-  const before = path[(i - 1 + N) % N];
-  const after = path[(i + 1) % N];
+  const before = path[(index - 1 + N) % N];
+  const after = path[(index + 1) % N];
   return after.clone().sub(before).normalize();
 }
 function side(i) {
