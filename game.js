@@ -1218,6 +1218,16 @@ function restartRace() {
 }
 document.getElementById('restart-button').addEventListener('click', restartRace);
 
+document.getElementById('finish-menu-button').addEventListener('click', () => {
+  // Reload without query parameters to return to the initial menu cleanly.
+  location.href = location.pathname;
+});
+document.getElementById('finish-exit-button').addEventListener('click', () => {
+  const message = document.getElementById('finish-exit-message');
+  try { window.close(); } catch (_) {}
+  if (message) message.textContent = 'Para sair, feche esta aba do navegador. O navegador pode bloquear o fechamento automático.';
+});
+
 const mainMenu = document.getElementById('main-menu');
 const settingsScreen = document.getElementById('settings-screen');
 const modeScreen = document.getElementById('mode-screen');
