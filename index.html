@@ -93,7 +93,12 @@
       <h1>Corrida concluída!</h1>
       <strong id="finish-position">1º LUGAR</strong>
       <p id="finish-stats">Tempo: 00:00.0 · 0 pontos · 0 moedas</p>
-      <button id="restart-button">CORRER NOVAMENTE</button>
+      <div class="finish-actions">
+        <button id="restart-button" type="button">PRÓXIMA CORRIDA</button>
+        <button id="finish-menu-button" class="finish-secondary" type="button">VOLTAR AO MENU INICIAL</button>
+        <button id="finish-exit-button" class="finish-secondary" type="button">SAIR DO JOGO</button>
+      </div>
+      <p id="finish-exit-message" class="finish-exit-message" aria-live="polite"></p>
     </div>
   </div>
 
@@ -204,8 +209,8 @@
       });
     })();
   </script>
-  <script src="menu.js?v=track-click-launch-9"></script>
-  <script type="module" src="game.js?v=track-click-launch-9"></script>
+  <script src="menu.js?v=finish-gamepad-10"></script>
+  <script type="module" src="game.js?v=finish-gamepad-10"></script>
   <script>
     if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       window.addEventListener("load", () => {
