@@ -170,7 +170,30 @@
     </div>
   </div>
 
-  <script src="menu.js?v=track-click-launch-6"></script>
-  <script type="module" src="game.js?v=track-click-launch-6"></script>
+  <script>
+    // Show a readable diagnostic instead of leaving the player on PREPARANDO forever.
+    (() => {
+      const loading = document.getElementById('loading');
+      function report(message) {
+        if (!loading) return;
+        loading.style.display = 'grid';
+        loading.style.zIndex = '2000';
+        loading.style.padding = '24px';
+        loading.style.textAlign = 'center';
+        loading.style.whiteSpace = 'pre-wrap';
+        loading.textContent = 'NÃO FOI POSSÍVEL INICIAR O JOGO\n\n' + message + '\n\nRecarregue a página. Se continuar, envie esta mensagem para corrigirmos.';
+      }
+      window.addEventListener('error', event => {
+        const message = event.message || (event.target && event.target.src ? 'Falha ao carregar: ' + event.target.src : 'Erro ao executar JavaScript.');
+        report(message);
+      });
+      window.addEventListener('unhandledrejection', event => {
+        const reason = event.reason;
+        report(reason && reason.message ? reason.message : String(reason || 'Falha ao iniciar o jogo.'));
+      });
+    })();
+  </script>
+  <script src="menu.js?v=track-click-launch-7"></script>
+  <script type="module" src="game.js?v=track-click-launch-7"></script>
 </body>
 </html>
